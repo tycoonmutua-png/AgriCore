@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agricore — Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:         #0a1a0a;
+      --surface:    #0f2210;
+      --card:       #112613;
+      --border:     #1e4022;
+      --border-mid: #2a5c2d;
+      --green:      #4ade80;
+      --green-dark: #15803d;
+      --text:       #f0fdf4;
+      --muted:      #6b9470;
+      --dim:        #3d5e40;
+      --red:        #ef4444;
+      --amber:      #f59e0b;
+    }
+
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .navbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 16px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .nav-logo-icon { width: 30px; height: 30px; background: var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .nav-badge { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.3); color: var(--green); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-admin-name { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: var(--muted); font-size: 12px; cursor: pointer; font-family: inherit; }
+
+    .tabs-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; position: sticky; top: 56px; z-index: 90; overflow-x: auto; scrollbar-width: none; }
+    .tabs-bar::-webkit-scrollbar { display: none; }
+    .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 12px 16px; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+    .tab-count { background: var(--border); color: var(--muted); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+    .tab-btn.active .tab-count { background: rgba(74,222,128,0.15); color: var(--green); }
+
+    .main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 4px; }
+    .stat-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+    .section-head h2 { font-size: 16px; font-weight: 700; }
+    .btn-primary { background: linear-gradient(135deg, var(--green-dark), var(--green)); border: none; border-radius: 10px; padding: 9px 16px; color: #052e16; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+    .search-wrap { position: relative; margin-bottom: 14px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+    .search-input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px 10px 36px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; }
+    .search-input::placeholder { color: var(--dim); }
+    .search-input:focus { border-color: var(--green-dark); }
+
+    .product-list { display: flex; flex-direction: column; gap: 10px; }
+    .swipe-wrapper { position: relative; border-radius: 14px; overflow: hidden; }
+    .swipe-bg { position: absolute; inset: 0; display: flex; align-items: center; border-radius: 14px; pointer-events: none; }
+    .swipe-bg-delete { background: rgba(239,68,68,0.15); justify-content: flex-start; padding-left: 20px; color: var(--red); font-size: 13px; font-weight: 700; }
+    .swipe-bg-edit { background: rgba(74,222,128,0.1); justify-content: flex-end; padding-right: 20px; color: var(--green); font-size: 13px; font-weight: 700; }
+    .product-row { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; position: relative; touch-action: pan-y; transition: transform 0.2s ease; will-change: transform; cursor: grab; }
+    .product-row.swiping { transition: none; }
+    .product-thumb { width: 52px; height: 52px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; flex-shrink: 0; }
+    .product-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .product-info { flex: 1; min-width: 0; }
+    .product-info-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-info-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .product-info-price { font-size: 14px; font-weight: 700; color: var(--green); }
+    .product-info-stock { font-size: 11px; color: var(--muted); }
+
+    .badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; display: inline-block; }
+    .badge-green  { background: rgba(74,222,128,0.1);  color: var(--green); }
+    .badge-amber  { background: rgba(245,158,11,0.1);  color: var(--amber); }
+    .badge-red    { background: rgba(239,68,68,0.1);   color: var(--red); }
+    .badge-blue   { background: rgba(96,165,250,0.1);  color: #60a5fa; }
+    .badge-purple { background: rgba(167,139,250,0.1); color: #a78bfa; }
+
+    .order-list { display: flex; flex-direction: column; gap: 10px; }
+    .order-row { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .order-row-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .order-id { font-family: monospace; font-size: 13px; font-weight: 700; color: var(--green); }
+    .order-date { font-size: 11px; color: var(--muted); }
+    .order-customer { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .order-phone { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .order-row-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .order-total-amount { font-size: 16px; font-weight: 700; color: var(--green); }
+    .order-badges { display: flex; gap: 6px; }
+    .order-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .btn-view { flex: 1; background: rgba(74,222,128,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 8px; color: var(--green); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; text-align: center; }
+    .btn-complete { flex: 1; background: rgba(96,165,250,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 8px; color: #60a5fa; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; text-align: center; }
+
+    .user-list { display: flex; flex-direction: column; gap: 10px; }
+    .user-row { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 42px; height: 42px; background: var(--surface); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; font-weight: 700; color: var(--green); }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-weight: 600; font-size: 14px; }
+    .user-email { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+
+    .state-box { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .state-box .icon { font-size: 36px; margin-bottom: 10px; }
+    .state-box p { font-size: 14px; }
+    .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+    .spinner { width: 26px; height: 26px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: flex-end; justify-content: center; padding: 0; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px 20px 0 0; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; animation: modal-up 0.25s ease; }
+    @keyframes modal-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 10px auto 0; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+    .modal-head h2 { font-size: 16px; }
+    .btn-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .modal-body { padding: 18px 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 15px; font-family: inherit; outline: none; resize: vertical; -webkit-appearance: none; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--green); }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--dim); }
+    .form-group select option { background: var(--surface); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ── Image upload area ── */
+    .img-upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.2s;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .img-upload-area:hover { border-color: var(--green); }
+    .img-upload-area.uploading { border-color: var(--amber); }
+    .img-upload-area.done { border-color: var(--green); border-style: solid; }
+    .img-upload-placeholder { text-align: center; padding: 20px; color: var(--muted); }
+    .img-upload-placeholder .icon { font-size: 32px; margin-bottom: 8px; }
+    .img-upload-placeholder p { font-size: 13px; margin-bottom: 4px; }
+    .img-upload-placeholder small { font-size: 11px; color: var(--dim); }
+    .img-upload-preview { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .img-upload-status {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.7); color: var(--green);
+      font-size: 12px; font-weight: 600; padding: 6px 12px;
+      text-align: center;
+    }
+    .img-url-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+    .img-url-row input { flex: 1; font-size: 12px; padding: 8px 12px; }
+    .img-url-row span { font-size: 11px; color: var(--dim); white-space: nowrap; }
+
+    .alert { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: none; }
+    .alert.show { display: block; }
+    .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert-success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--green); }
+
+    .modal-actions { display: flex; gap: 10px; margin-top: 6px; padding-bottom: 8px; }
+    .btn-cancel { flex: 1; background: none; border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: var(--muted); font-size: 14px; cursor: pointer; font-family: inherit; }
+    .btn-save { flex: 2; background: linear-gradient(135deg, var(--green-dark), var(--green)); border: none; border-radius: 12px; padding: 14px; color: #052e16; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-del-confirm { flex: 2; background: var(--red); border: none; border-radius: 12px; padding: 14px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(5,46,22,0.3); border-top-color: #052e16; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+
+    .order-items-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+    .order-item-row { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+    .order-item-row span:last-child { color: var(--green); font-weight: 600; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row span:first-child { color: var(--muted); }
+    .detail-row span:last-child { font-weight: 500; }
+
+    @media (min-width: 768px) {
+      .navbar { padding: 0 24px; height: 60px; }
+      .tabs-bar { padding: 0 24px; }
+      .main { padding: 24px; }
+      .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+      .stat-value { font-size: 26px; }
+      .product-list { display: none; }
+      .order-list { display: none; }
+      .user-list { display: none; }
+      .desktop-table { display: block !important; }
+      .modal-overlay { align-items: center; padding: 20px; }
+      .modal { border-radius: 20px; max-width: 480px; }
+      .modal-handle { display: none; }
+    }
+
+    .desktop-table { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--surface); padding: 11px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); border-bottom: 1px solid var(--border); }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(74,222,128,0.03); }
+    td { padding: 12px 14px; font-size: 13px; vertical-align: middle; }
+    .product-cell { display: flex; align-items: center; gap: 10px; }
+    .product-cell-name { font-weight: 600; font-size: 13px; }
+    .product-cell-cat { font-size: 11px; color: var(--muted); }
+    .action-btns { display: flex; gap: 6px; }
+    .btn-edit-sm { background: rgba(74,222,128,0.08); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--green); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-del-sm { background: rgba(239,68,68,0.07); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--red); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-status-sm { background: rgba(96,165,250,0.08); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: #60a5fa; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="nav-logo">
+        <div class="nav-logo-icon">🌱</div>
+        Agricore
+      </div>
+      <span class="nav-badge">ADMIN</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-admin-name" id="navAdminName"></span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('products')" id="tabProducts">
+      📦 Products <span class="tab-count" id="productCount">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('orders')" id="tabOrders">
+      🧾 Orders <span class="tab-count" id="orderCount">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('users')" id="tabUsers">
+      👥 Users <span class="tab-count" id="userCount">0</span>
+    </button>
+  </div>
+
+  <div class="main">
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div id="tabProducts-content">
+      <div class="section-head">
+        <h2>📦 Products</h2>
+        <button class="btn-primary" onclick="openAddProduct()">➕ Add Product</button>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="productSearch" placeholder="Search products..." oninput="renderProducts()" />
+      </div>
+      <div class="product-list" id="productCards"></div>
+      <div class="desktop-table" id="productsTable"></div>
+    </div>
+
+    <div id="tabOrders-content" style="display:none;">
+      <div class="section-head"><h2>🧾 Orders</h2></div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="orderSearch" placeholder="Search by name or phone..." oninput="renderOrders()" />
+      </div>
+      <div class="order-list" id="orderCards"></div>
+      <div class="desktop-table" id="ordersTable"></div>
+    </div>
+
+    <div id="tabUsers-content" style="display:none;">
+      <div class="section-head"><h2>👥 Users</h2></div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="userSearch" placeholder="Search users..." oninput="renderUsers()" />
+      </div>
+      <div class="user-list" id="userCards"></div>
+      <div class="desktop-table" id="usersTable"></div>
+    </div>
+  </div>
+
+  <!-- ADD/EDIT PRODUCT MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-head">
+        <h2 id="productModalTitle">➕ Add Product</h2>
+        <button class="btn-close" onclick="closeProductModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-error" id="productError"></div>
+
+        <!-- IMAGE UPLOAD -->
+        <div class="form-group">
+          <label>Product Image</label>
+          <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('imgFileInput').click()">
+            <div class="img-upload-placeholder" id="imgPlaceholder">
+              <div class="icon">📸</div>
+              <p>Tap to upload image</p>
+              <small>JPG, PNG, WEBP · max 10MB</small>
+            </div>
+            <img id="imgPreview" class="img-upload-preview" style="display:none" alt="preview" />
+            <div class="img-upload-status" id="imgStatus" style="display:none"></div>
+          </div>
+          <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImageFile(event)" />
+
+          <!-- OR paste URL -->
+          <div class="img-url-row">
+            <span>or URL:</span>
+            <input type="text" id="pImage" placeholder="https://res.cloudinary.com/..." oninput="handleImageUrl(this.value)" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Product Name *</label>
+            <input type="text" id="pName" placeholder="e.g. Maize Seeds" />
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="pCategory">
+              <option>Seeds</option>
+              <option>Fertilizer</option>
+              <option>Pesticides</option>
+              <option>Equipment</option>
+              <option>Produce</option>
+              <option>Feeds</option>
+              <option>General</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price (KES) *</label>
+            <input type="number" id="pPrice" placeholder="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Stock (units) *</label>
+            <input type="number" id="pStock" placeholder="0" min="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Unit</label>
+          <select id="pUnit">
+            <option>kg</option><option>g</option><option>litre</option>
+            <option>piece</option><option>bag</option><option>box</option>
+            <option>crate</option><option>unit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="pDescription" rows="3" placeholder="Brief product description..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeProductModal()">Cancel</button>
+          <button class="btn-save" id="btnSaveProduct" onclick="saveProduct()">Save Product</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE MODAL -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-handle"></div>
+      <div class="modal-head">
+        <h2>🗑️ Delete Product</h2>
+        <button class="btn-close" onclick="closeDeleteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.6;">
+          Are you sure you want to delete <strong id="deleteProductName" style="color:var(--text)"></strong>? This cannot be undone.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+          <button class="btn-del-confirm" onclick="confirmDelete()">Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER DETAIL MODAL -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-head">
+        <h2>🧾 Order Details</h2>
+        <button class="btn-close" onclick="closeOrderModal()">✕</button>
+      </div>
+      <div class="modal-body" id="orderModalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    var API   = "http://localhost:5001/api";
+    var token = sessionStorage.getItem("token");
+    var user  = JSON.parse(sessionStorage.getItem("user") || "{}");
+
+    if (!token || user.role !== "admin") window.location.href = "index.html";
+
+    document.getElementById("navAdminName").textContent = user.name ? user.name.split(" ")[0] : "";
+
+    function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+
+    var products = [], orders = [], users = [];
+    var editingProductId = null, deletingProductId = null;
+    var uploadedImageUrl = ""; // holds Cloudinary URL after upload
+
+    var EMOJI = { Seeds:"🌱", Fertilizer:"🧪", Pesticides:"🛡️", Equipment:"⚙️", Produce:"🥬", Feeds:"📦", General:"🌾" };
+
+    function switchTab(tab) {
+      ["products","orders","users"].forEach(function(t) {
+        document.getElementById("tab" + cap(t) + "-content").style.display = t === tab ? "block" : "none";
+        document.getElementById("tab" + cap(t)).classList.toggle("active", t === tab);
+      });
+    }
+
+    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    async function loadAll() {
+      renderStats();
+      await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
+      renderStats();
+    }
+
+    function renderStats() {
+      var revenue = orders.filter(function(o) { return o.paymentStatus === "paid"; }).reduce(function(s, o) { return s + o.totalAmount; }, 0);
+      var pending = orders.filter(function(o) { return o.status === "pending"; }).length;
+      document.getElementById("statsGrid").innerHTML =
+        stat("📦 Products", products.length, "In inventory") +
+        stat("🧾 Orders", orders.length, pending + " pending") +
+        '<div class="stat-card"><div class="stat-label">💰 Revenue</div><div class="stat-value" style="color:var(--green);font-size:18px;">KES ' + revenue.toLocaleString() + '</div><div class="stat-sub">Confirmed</div></div>' +
+        stat("👥 Users", users.length, "Registered");
+    }
+
+    function stat(label, value, sub) {
+      return '<div class="stat-card"><div class="stat-label">' + label + '</div><div class="stat-value">' + value + '</div><div class="stat-sub">' + sub + '</div></div>';
+    }
+
+    // ── IMAGE UPLOAD ──
+    async function handleImageFile(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      // Show preview immediately
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        showImgPreview(ev.target.result);
+        setImgStatus("⏳ Uploading to Cloudinary...", "var(--amber)");
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to backend → Cloudinary
+      try {
+        var formData = new FormData();
+        formData.append("image", file);
+        var res = await fetch(API + "/upload", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token },
+          body: formData
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Upload failed");
+        uploadedImageUrl = data.url;
+        document.getElementById("pImage").value = data.url;
+        showImgPreview(data.url);
+        setImgStatus("✅ Uploaded to Cloudinary", "var(--green)");
+        setTimeout(function() { document.getElementById("imgStatus").style.display = "none"; }, 2000);
+      } catch(err) {
+        setImgStatus("❌ " + err.message, "var(--red)");
+      }
+    }
+
+    function handleImageUrl(url) {
+      uploadedImageUrl = url;
+      if (url && url.startsWith("http")) {
+        showImgPreview(url);
+      } else {
+        resetImgPreview();
+      }
+    }
+
+    function showImgPreview(src) {
+      document.getElementById("imgPlaceholder").style.display = "none";
+      var img = document.getElementById("imgPreview");
+      img.src = src;
+      img.style.display = "block";
+      document.getElementById("imgUploadArea").classList.add("done");
+    }
+
+    function resetImgPreview() {
+      document.getElementById("imgPlaceholder").style.display = "flex";
+      document.getElementById("imgPreview").style.display = "none";
+      document.getElementById("imgPreview").src = "";
+      document.getElementById("imgStatus").style.display = "none";
+      document.getElementById("imgUploadArea").classList.remove("done", "uploading");
+      uploadedImageUrl = "";
+    }
+
+    function setImgStatus(msg, color) {
+      var el = document.getElementById("imgStatus");
+      el.textContent = msg;
+      el.style.color = color || "var(--green)";
+      el.style.display = "block";
+    }
+
+    // ── PRODUCTS ──
+    async function loadProducts() {
+      document.getElementById("productCards").innerHTML = loadingHTML();
+      document.getElementById("productsTable").innerHTML = loadingHTML();
+      try {
+        var res = await fetch(API + "/products", { headers: { Authorization: "Bearer " + token } });
+        products = await res.json();
+        document.getElementById("productCount").textContent = products.length;
+        renderProducts();
+      } catch(e) {
+        document.getElementById("productCards").innerHTML = errorHTML("Failed to load products.");
+        document.getElementById("productsTable").innerHTML = errorHTML("Failed to load products.");
+      }
+    }
+
+    function renderProducts() {
+      var q = document.getElementById("productSearch").value.toLowerCase();
+      var filtered = products.filter(function(p) {
+        return p.name.toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q);
+      });
+
+      if (!filtered.length) {
+        document.getElementById("productCards").innerHTML = emptyHTML("No products found.", "📦");
+        document.getElementById("productsTable").innerHTML = emptyHTML("No products found.", "📦");
+        return;
+      }
+
+      document.getElementById("productCards").innerHTML = filtered.map(function(p) {
+        var stockCls = p.stock === 0 ? "badge-red" : p.stock <= 10 ? "badge-amber" : "badge-green";
+        var stockLbl = p.stock === 0 ? "Out of Stock" : p.stock <= 10 ? "Low Stock" : "In Stock";
+        var imgHtml = p.image ? '<img src="' + p.image + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' : (EMOJI[p.category] || "📦");
+        var safeName = p.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+        return '<div class="swipe-wrapper" id="wrap-' + p._id + '">' +
+          '<div class="swipe-bg swipe-bg-delete">🗑️ Delete</div>' +
+          '<div class="swipe-bg swipe-bg-edit">✏️ Edit</div>' +
+          '<div class="product-row" id="row-' + p._id + '" data-id="' + p._id + '" data-name="' + p.name.replace(/"/g, "&quot;") + '">' +
+          '<div class="product-thumb">' + imgHtml + '</div>' +
+          '<div class="product-info">' +
+          '<div class="product-info-name">' + p.name + '</div>' +
+          '<div class="product-info-meta"><span class="product-info-price">KES ' + Number(p.price).toLocaleString() + '</span><span class="badge ' + stockCls + '">' + stockLbl + '</span></div>' +
+          '<div class="product-info-stock">Stock: ' + p.stock + ' · ' + (p.category || "General") + '</div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
+          '<button class="btn-edit-sm" onclick="openEditProduct(\'' + p._id + '\')">✏️ Edit</button>' +
+          '<button class="btn-del-sm" onclick="openDeleteProduct(\'' + p._id + '\',\'' + safeName + '\')">🗑️ Del</button>' +
+          '</div></div></div>';
+      }).join("");
+
+      initSwipe();
+
+      document.getElementById("productsTable").innerHTML = '<table><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+        filtered.map(function(p) {
+          var stockCls = p.stock === 0 ? "badge-red" : p.stock <= 10 ? "badge-amber" : "badge-green";
+          var stockLbl = p.stock === 0 ? "Out of Stock" : p.stock <= 10 ? "Low Stock" : "In Stock";
+          var imgHtml = p.image ? '<img src="' + p.image + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">' : (EMOJI[p.category] || "📦");
+          var safeName = p.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+          return '<tr>' +
+            '<td><div class="product-cell"><div class="product-thumb" style="width:36px;height:36px;font-size:16px;">' + imgHtml + '</div><div><div class="product-cell-name">' + p.name + '</div><div class="product-cell-cat">' + (p.unit || "unit") + '</div></div></div></td>' +
+            '<td><span class="badge badge-green">' + (EMOJI[p.category] || "📦") + " " + (p.category || "General") + '</span></td>' +
+            '<td style="font-weight:600;color:var(--green)">KES ' + Number(p.price).toLocaleString() + '</td>' +
+            '<td>' + p.stock + '</td>' +
+            '<td><span class="badge ' + stockCls + '">' + stockLbl + '</span></td>' +
+            '<td><div class="action-btns"><button class="btn-edit-sm" onclick="openEditProduct(\'' + p._id + '\')">✏️ Edit</button><button class="btn-del-sm" onclick="openDeleteProduct(\'' + p._id + '\',\'' + safeName + '\')">🗑️ Delete</button></div></td>' +
+            '</tr>';
+        }).join("") + '</tbody></table>';
+    }
+
+    function openAddProduct() {
+      editingProductId = null;
+      document.getElementById("productModalTitle").textContent = "➕ Add Product";
+      ["pName","pPrice","pStock","pDescription"].forEach(function(id) { document.getElementById(id).value = ""; });
+      document.getElementById("pImage").value = "";
+      document.getElementById("pCategory").value = "Seeds";
+      document.getElementById("pUnit").value = "kg";
+      document.getElementById("productError").classList.remove("show");
+      document.getElementById("btnSaveProduct").textContent = "Save Product";
+      resetImgPreview();
+      document.getElementById("productModal").classList.add("open");
+    }
+
+    function openEditProduct(id) {
+      var p = products.find(function(p) { return p._id === id; });
+      if (!p) return;
+      editingProductId = id;
+      document.getElementById("productModalTitle").textContent = "✏️ Edit Product";
+      document.getElementById("pName").value = p.name;
+      document.getElementById("pPrice").value = p.price;
+      document.getElementById("pStock").value = p.stock;
+      document.getElementById("pImage").value = p.image || "";
+      document.getElementById("pDescription").value = p.description || "";
+      document.getElementById("pCategory").value = p.category || "Seeds";
+      document.getElementById("pUnit").value = p.unit || "kg";
+      document.getElementById("productError").classList.remove("show");
+      document.getElementById("btnSaveProduct").textContent = "Save Changes";
+      uploadedImageUrl = p.image || "";
+      resetImgPreview();
+      if (p.image) showImgPreview(p.image);
+      document.getElementById("productModal").classList.add("open");
+    }
+
+    function closeProductModal() {
+      document.getElementById("productModal").classList.remove("open");
+      document.getElementById("imgFileInput").value = "";
+    }
+
+    async function saveProduct() {
+      var name        = document.getElementById("pName").value.trim();
+      var price       = document.getElementById("pPrice").value;
+      var stock       = document.getElementById("pStock").value;
+      var category    = document.getElementById("pCategory").value;
+      var unit        = document.getElementById("pUnit").value;
+      var image       = document.getElementById("pImage").value.trim() || uploadedImageUrl;
+      var description = document.getElementById("pDescription").value.trim();
+      var errEl       = document.getElementById("productError");
+      errEl.classList.remove("show");
+
+      if (!name || !price || stock === "") {
+        errEl.textContent = "Please fill in name, price and stock.";
+        errEl.classList.add("show");
+        return;
+      }
+
+      var btn = document.getElementById("btnSaveProduct");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-spinner"></span>Saving...';
+
+      try {
+        var url    = editingProductId ? API + "/products/" + editingProductId : API + "/products";
+        var method = editingProductId ? "PUT" : "POST";
+        var res    = await fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ name: name, price: Number(price), stock: Number(stock), category: category, unit: unit, image: image, description: description })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to save.");
+        closeProductModal();
+        await loadProducts();
+        renderStats();
+      } catch(err) {
+        errEl.textContent = err.message;
+        errEl.classList.add("show");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editingProductId ? "Save Changes" : "Save Product";
+      }
+    }
+
+    function openDeleteProduct(id, name) {
+      deletingProductId = id;
+      document.getElementById("deleteProductName").textContent = name;
+      document.getElementById("deleteModal").classList.add("open");
+    }
+
+    function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("open"); }
+
+    async function confirmDelete() {
+      try {
+        await fetch(API + "/products/" + deletingProductId, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+        closeDeleteModal();
+        await loadProducts();
+        renderStats();
+      } catch(e) { alert("Failed to delete product."); }
+    }
+
+    // ── ORDERS ──
+    async function loadOrders() {
+      document.getElementById("orderCards").innerHTML = loadingHTML();
+      document.getElementById("ordersTable").innerHTML = loadingHTML();
+      try {
+        var res = await fetch(API + "/orders/all", { headers: { Authorization: "Bearer " + token } });
+        orders = await res.json();
+        document.getElementById("orderCount").textContent = orders.length;
+        renderOrders();
+      } catch(e) {
+        document.getElementById("orderCards").innerHTML = errorHTML("Failed to load orders.");
+        document.getElementById("ordersTable").innerHTML = errorHTML("Failed to load orders.");
+      }
+    }
+
+    function renderOrders() {
+      var q = document.getElementById("orderSearch").value.toLowerCase();
+      var filtered = orders.filter(function(o) {
+        return (o.customer && o.customer.name || "").toLowerCase().includes(q) ||
+               (o.customer && o.customer.phone || "").toLowerCase().includes(q);
+      });
+      if (!filtered.length) {
+        document.getElementById("orderCards").innerHTML = emptyHTML("No orders yet.", "🧾");
+        document.getElementById("ordersTable").innerHTML = emptyHTML("No orders yet.", "🧾");
+        return;
+      }
+      document.getElementById("orderCards").innerHTML = filtered.map(function(o) {
+        var payBadge  = o.paymentStatus === "paid" ? "badge-green" : o.paymentStatus === "failed" ? "badge-red" : "badge-amber";
+        var statBadge = o.status === "completed" ? "badge-blue" : "badge-amber";
+        var date      = new Date(o.createdAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short" });
+        return '<div class="order-row">' +
+          '<div class="order-row-top"><span class="order-id">#' + String(o._id).slice(-6).toUpperCase() + '</span><span class="order-date">' + date + '</span></div>' +
+          '<div class="order-customer">' + (o.customer && o.customer.name || "—") + '</div>' +
+          '<div class="order-phone">' + (o.customer && o.customer.phone || "") + ' · ' + (o.items && o.items.length || 0) + ' item(s)</div>' +
+          '<div class="order-row-bottom"><span class="order-total-amount">KES ' + Number(o.totalAmount).toLocaleString() + '</span>' +
+          '<div class="order-badges"><span class="badge ' + payBadge + '">' + (o.paymentStatus || "pending") + '</span><span class="badge ' + statBadge + '">' + (o.status || "pending") + '</span></div></div>' +
+          '<div class="order-actions"><button class="btn-view" onclick="viewOrder(\'' + o._id + '\')">👁️ View</button>' +
+          (o.status !== "completed" ? '<button class="btn-complete" onclick="markComplete(\'' + o._id + '\')">✅ Complete</button>' : "") +
+          '</div></div>';
+      }).join("");
+      document.getElementById("ordersTable").innerHTML = '<table><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>' +
+        filtered.map(function(o) {
+          var payBadge  = o.paymentStatus === "paid" ? "badge-green" : o.paymentStatus === "failed" ? "badge-red" : "badge-amber";
+          var statBadge = o.status === "completed" ? "badge-blue" : "badge-amber";
+          var date      = new Date(o.createdAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" });
+          return '<tr>' +
+            '<td style="font-family:monospace;font-size:12px;color:var(--muted)">#' + String(o._id).slice(-6).toUpperCase() + '</td>' +
+            '<td><div style="font-weight:600">' + (o.customer && o.customer.name || "—") + '</div><div style="font-size:11px;color:var(--muted)">' + (o.customer && o.customer.phone || "") + '</div></td>' +
+            '<td style="color:var(--muted)">' + (o.items && o.items.length || 0) + '</td>' +
+            '<td style="font-weight:700;color:var(--green)">KES ' + Number(o.totalAmount).toLocaleString() + '</td>' +
+            '<td><span class="badge ' + payBadge + '">' + (o.paymentStatus || "pending") + '</span></td>' +
+            '<td><span class="badge ' + statBadge + '">' + (o.status || "pending") + '</span></td>' +
+            '<td style="font-size:11px;color:var(--muted)">' + date + '</td>' +
+            '<td><div class="action-btns"><button class="btn-edit-sm" onclick="viewOrder(\'' + o._id + '\')">👁️ View</button>' +
+            (o.status !== "completed" ? '<button class="btn-status-sm" onclick="markComplete(\'' + o._id + '\')">✅ Complete</button>' : "") +
+            '</div></td></tr>';
+        }).join("") + '</tbody></table>';
+    }
+
+    function viewOrder(id) {
+      var o = orders.find(function(o) { return o._id === id; });
+      if (!o) return;
+      var date      = new Date(o.createdAt).toLocaleString("en-KE");
+      var payBadge  = o.paymentStatus === "paid" ? "badge-green" : o.paymentStatus === "failed" ? "badge-red" : "badge-amber";
+      var statBadge = o.status === "completed" ? "badge-blue" : "badge-amber";
+      document.getElementById("orderModalBody").innerHTML =
+        '<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--muted);margin-bottom:2px;">ORDER</div>' +
+        '<div style="font-size:22px;font-weight:700;font-family:monospace;">#' + String(o._id).slice(-6).toUpperCase() + '</div></div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:18px;"><span class="badge ' + payBadge + '">' + o.paymentStatus + '</span><span class="badge ' + statBadge + '">' + o.status + '</span></div>' +
+        '<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-weight:700;">Customer</div>' +
+        '<div class="detail-row"><span>Name</span><span>' + (o.customer && o.customer.name || "—") + '</span></div>' +
+        '<div class="detail-row"><span>Phone</span><span>' + (o.customer && o.customer.phone || "—") + '</span></div>' +
+        '<div class="detail-row"><span>Email</span><span>' + (o.customer && o.customer.email || "—") + '</span></div></div>' +
+        '<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-weight:700;">Items</div>' +
+        '<div class="order-items-list">' +
+        (o.items || []).map(function(i) {
+          return '<div class="order-item-row"><span>' + i.productName + ' × ' + i.quantity + '</span><span>KES ' + (i.price * i.quantity).toLocaleString() + '</span></div>';
+        }).join("") + '</div></div>' +
+        '<div class="detail-row"><span>M-Pesa Code</span><span style="font-family:monospace">' + (o.mpesaCode || "—") + '</span></div>' +
+        '<div class="detail-row"><span>Date</span><span>' + date + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;padding:14px 0 0;"><span>Total</span><span style="color:var(--green)">KES ' + Number(o.totalAmount).toLocaleString() + '</span></div>' +
+        (o.status !== "completed" ? '<div style="margin-top:16px;"><button class="btn-save" style="width:100%" onclick="markComplete(\'' + o._id + '\');closeOrderModal()">✅ Mark as Completed</button></div>' : "");
+      document.getElementById("orderModal").classList.add("open");
+    }
+
+    function closeOrderModal() { document.getElementById("orderModal").classList.remove("open"); }
+
+    async function markComplete(id) {
+      try {
+        await fetch(API + "/orders/" + id, { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ status: "completed", paymentStatus: "paid" }) });
+        await loadOrders(); renderStats();
+      } catch(e) { alert("Failed to update order."); }
+    }
+
+    // ── USERS ──
+    async function loadUsers() {
+      document.getElementById("userCards").innerHTML = loadingHTML();
+      document.getElementById("usersTable").innerHTML = loadingHTML();
+      try {
+        var res = await fetch(API + "/users", { headers: { Authorization: "Bearer " + token } });
+        if (!res.ok) throw new Error();
+        users = await res.json();
+        document.getElementById("userCount").textContent = users.length;
+        renderUsers();
+      } catch(e) {
+        document.getElementById("userCards").innerHTML = emptyHTML("Users endpoint not available.", "👥");
+        document.getElementById("usersTable").innerHTML = emptyHTML("Users endpoint not available.", "👥");
+      }
+    }
+
+    function renderUsers() {
+      var q = document.getElementById("userSearch").value.toLowerCase();
+      var filtered = users.filter(function(u) {
+        return (u.name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
+      });
+      if (!filtered.length) { document.getElementById("userCards").innerHTML = emptyHTML("No users found.", "👥"); document.getElementById("usersTable").innerHTML = emptyHTML("No users found.", "👥"); return; }
+      document.getElementById("userCards").innerHTML = filtered.map(function(u) {
+        var date = new Date(u.createdAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" });
+        var roleBadge = u.role === "admin" ? "badge-purple" : "badge-green";
+        return '<div class="user-row"><div class="user-avatar">' + (u.name || "?").charAt(0).toUpperCase() + '</div>' +
+          '<div class="user-info"><div class="user-name">' + (u.name || "—") + '</div><div class="user-email">' + u.email + '</div>' +
+          '<div class="user-meta"><span class="badge ' + roleBadge + '">' + (u.role || "customer") + '</span>' +
+          '<span class="badge ' + (u.googleId ? "badge-blue" : "badge-amber") + '">' + (u.googleId ? "Google" : "Email") + '</span>' +
+          '<span style="font-size:11px;color:var(--dim)">' + date + '</span></div></div></div>';
+      }).join("");
+      document.getElementById("usersTable").innerHTML = '<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Method</th></tr></thead><tbody>' +
+        filtered.map(function(u) {
+          var date = new Date(u.createdAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" });
+          var roleBadge = u.role === "admin" ? "badge-purple" : "badge-green";
+          return '<tr><td style="font-weight:600">' + (u.name || "—") + '</td><td style="color:var(--muted)">' + u.email + '</td>' +
+            '<td><span class="badge ' + roleBadge + '">' + (u.role || "customer") + '</span></td>' +
+            '<td style="font-size:11px;color:var(--muted)">' + date + '</td>' +
+            '<td><span class="badge ' + (u.googleId ? "badge-blue" : "badge-amber") + '">' + (u.googleId ? "🔵 Google" : "📧 Email") + '</span></td></tr>';
+        }).join("") + '</tbody></table>';
+    }
+
+    function loadingHTML() { return '<div class="spinner-wrap"><div class="spinner"></div><p>Loading...</p></div>'; }
+    function errorHTML(msg) { return '<div class="state-box"><div class="icon">⚠️</div><p>' + msg + '</p></div>'; }
+    function emptyHTML(msg, icon) { return '<div class="state-box"><div class="icon">' + (icon || "📭") + '</div><p>' + msg + '</p></div>'; }
+
+    function initSwipe() {
+      document.querySelectorAll(".product-row").forEach(function(row) {
+        var startX = 0, currentX = 0, isDragging = false;
+        var THRESHOLD = 80;
+        function onStart(e) { startX = e.touches ? e.touches[0].clientX : e.clientX; isDragging = true; row.classList.add("swiping"); }
+        function onMove(e) { if (!isDragging) return; currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX; currentX = Math.max(-140, Math.min(140, currentX)); row.style.transform = "translateX(" + currentX + "px)"; }
+        function onEnd() {
+          if (!isDragging) return; isDragging = false; row.classList.remove("swiping");
+          var id = row.dataset.id; var name = row.dataset.name;
+          if (currentX > THRESHOLD) { row.style.transform = "translateX(0)"; openDeleteProduct(id, name); }
+          else if (currentX < -THRESHOLD) { row.style.transform = "translateX(0)"; openEditProduct(id); }
+          else { row.style.transform = "translateX(0)"; }
+          currentX = 0;
+        }
+        row.addEventListener("touchstart", onStart, { passive: true });
+        row.addEventListener("touchmove", onMove, { passive: true });
+        row.addEventListener("touchend", onEnd);
+        row.addEventListener("mousedown", onStart);
+        row.addEventListener("mousemove", onMove);
+        row.addEventListener("mouseup", onEnd);
+        row.addEventListener("mouseleave", onEnd);
+      });
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
