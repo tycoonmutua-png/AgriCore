@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agricore — Farm Supplies Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#3ddc6e">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --green-btn: #2e7d32; --green-btn-hover: #1b5e20; --green-accent: #4caf50; --white: #ffffff; }
@@ -371,7 +373,7 @@
 </div>
 
 <script>
-  const API = 'http://localhost:5001';
+  const API = 'https://agricore-d7pw.onrender.com';
 
   /* ── Helpers ── */
   function safeParse(str) {
@@ -617,6 +619,13 @@
     if (e.key !== 'Enter') return;
     document.getElementById('signin-panel').classList.contains('visible') ? handleLogin() : handleRegister();
   });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log('✅ Service Worker registered'))
+      .catch(err => console.log('❌ SW error:', err));
+  }
 </script>
 </body>
 </html>
