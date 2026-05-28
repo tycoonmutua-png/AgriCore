@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agricore — Shop</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#3ddc6e">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -27,60 +29,34 @@
     body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
     body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.4; }
 
-    /* ── GREETING HEADER (matches login page style) ── */
+    /* ── HEADER ── */
     .shop-header {
       background: linear-gradient(135deg, #0c2b0d 0%, #162e17 50%, #0a1f0b 100%);
       border-bottom: 1px solid var(--border);
       padding: 28px 16px 20px;
       position: relative; overflow: hidden;
     }
-    .shop-header::before {
-      content: ''; position: absolute; top: -60px; right: -60px;
-      width: 240px; height: 240px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(61,220,110,0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .shop-header::after {
-      content: '🌾'; position: absolute; right: 16px; top: 50%;
-      transform: translateY(-50%); font-size: 42px; opacity: 0.18;
-      pointer-events: none;
-    }
+    .shop-header::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(61,220,110,0.1) 0%, transparent 70%); pointer-events: none; }
+    .shop-header::after { content: '🌾'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 42px; opacity: 0.18; pointer-events: none; }
     .greeting-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
     .greeting-name  { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; line-height: 1.2; }
     .greeting-name span { color: var(--green); }
     .greeting-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
-
-    /* Logo row in header */
-    .header-logo-row {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
-    }
-    .header-logo-icon {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, var(--green-dim), var(--green));
-      border-radius: 7px; display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
+    .header-logo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .header-logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--green-dim), var(--green)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
     .header-logo-text { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
     .header-logo-text span { color: var(--green); }
     .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-
-    .cart-btn {
-      position: relative; background: rgba(61,220,110,0.08);
-      border: 1px solid var(--green-dim); border-radius: 9px;
-      padding: 7px 12px; color: var(--green);
-      font-size: 12px; font-weight: 700; cursor: pointer;
-      font-family: inherit; display: flex; align-items: center; gap: 5px;
-      transition: background 0.2s; white-space: nowrap;
-    }
+    .cart-btn { position: relative; background: rgba(61,220,110,0.08); border: 1px solid var(--green-dim); border-radius: 9px; padding: 7px 12px; color: var(--green); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 5px; transition: background 0.2s; white-space: nowrap; }
     .cart-btn:hover { background: rgba(61,220,110,0.18); }
     .cart-badge { position: absolute; top: -6px; right: -6px; background: var(--green); color: #041a08; font-size: 10px; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: none; align-items: center; justify-content: center; }
     .cart-badge.show { display: flex; }
-    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .btn-logout  { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
     .btn-logout:hover { border-color: var(--border-mid); color: var(--text); }
-    .btn-orders { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .btn-orders  { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
     .btn-orders:hover { border-color: var(--green-dim); color: var(--green); }
 
-    /* ── CATEGORY FILTER ── */
+    /* ── FILTER BAR ── */
     .filter-bar { padding: 12px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
     .filter-bar::-webkit-scrollbar { display: none; }
     .filter-chip { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
@@ -97,17 +73,17 @@
     .main { padding: 0 12px 120px; max-width: 1200px; margin: 0 auto; }
     .section-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 14px 4px 10px; }
     .products-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
-    @media (min-width: 640px) { .products-grid { grid-template-columns: repeat(3,1fr); } }
-    @media (min-width: 900px) { .products-grid { grid-template-columns: repeat(4,1fr); gap: 14px; } }
+    @media (min-width: 640px)  { .products-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (min-width: 900px)  { .products-grid { grid-template-columns: repeat(4,1fr); gap: 14px; } }
     .product-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s; }
     .product-card:hover { border-color: var(--border-mid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
     .product-img { width: 100%; aspect-ratio: 1; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 42px; position: relative; overflow: hidden; }
     .product-img img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
     .product-body { padding: 10px 12px 12px; }
     .product-name { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .product-cat { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .product-cat  { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
     .product-price { font-size: 16px; font-weight: 800; color: var(--green); letter-spacing: -0.3px; }
-    .product-unit { font-size: 10px; color: var(--muted); font-weight: 500; }
+    .product-unit  { font-size: 10px; color: var(--muted); font-weight: 500; }
     .product-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
     .stock-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
     .stock-in  { background: rgba(61,220,110,0.1);  color: var(--green); }
@@ -165,9 +141,11 @@
     .order-card-bottom { display: flex; align-items: center; justify-content: space-between; }
     .order-amount { font-size: 15px; font-weight: 800; color: var(--green); }
     .order-badge { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
-    .badge-pending   { background: rgba(245,166,35,0.1); color: var(--amber); }
-    .badge-completed { background: rgba(90,180,245,0.1); color: var(--blue); }
-    .badge-paid      { background: rgba(61,220,110,0.1); color: var(--green); }
+    .badge-pending       { background: rgba(245,166,35,0.1);  color: var(--amber); }
+    .badge-initializing  { background: rgba(90,180,245,0.1);  color: var(--blue); }
+    .badge-completed     { background: rgba(61,220,110,0.1);  color: var(--green); }
+    .badge-paid          { background: rgba(61,220,110,0.1);  color: var(--green); }
+    .badge-failed        { background: rgba(240,82,82,0.1);   color: var(--red); }
 
     /* ── CHECKOUT MODAL ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 600; align-items: flex-end; justify-content: center; padding: 0; }
@@ -180,10 +158,9 @@
     .modal-body { padding: 18px 20px; }
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
-    .form-group input, .form-group select { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; color: var(--text); font-size: 15px; font-family: inherit; font-weight: 500; outline: none; -webkit-appearance: none; transition: border-color 0.2s; }
-    .form-group input:focus, .form-group select:focus { border-color: var(--green-dim); }
+    .form-group input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; color: var(--text); font-size: 15px; font-family: inherit; font-weight: 500; outline: none; transition: border-color 0.2s; }
+    .form-group input:focus { border-color: var(--green-dim); }
     .form-group input::placeholder { color: var(--dim); }
-    .form-group select option { background: var(--surface); }
     .order-summary { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
     .summary-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
     .summary-item { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
@@ -200,28 +177,42 @@
     .pay-panel { display: none; }
     .pay-panel.show { display: block; }
     .info-box { border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-    .info-box.green { background: rgba(61,220,110,0.06); border: 1px solid var(--green-dim); }
-    .info-box.amber { background: rgba(245,166,35,0.06); border: 1px solid rgba(245,166,35,0.3); }
-    .info-box.blue  { background: rgba(90,180,245,0.06); border: 1px solid rgba(90,180,245,0.25); }
+    .info-box.green { background: rgba(61,220,110,0.06);  border: 1px solid var(--green-dim); }
+    .info-box.amber { background: rgba(245,166,35,0.06);  border: 1px solid rgba(245,166,35,0.3); }
+    .info-box.blue  { background: rgba(90,180,245,0.06);  border: 1px solid rgba(90,180,245,0.25); }
     .info-box p { font-size: 13px; color: var(--muted); line-height: 1.6; }
     .info-box.green strong { color: var(--green); }
     .info-box.amber strong { color: var(--amber); }
     .info-box.blue  strong { color: var(--blue); }
     .alert { padding: 11px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-bottom: 14px; display: none; }
     .alert.show { display: block; }
-    .alert-error   { background: rgba(240,82,82,0.08); border: 1px solid rgba(240,82,82,0.3); color: #fca5a5; }
+    .alert-error   { background: rgba(240,82,82,0.08);  border: 1px solid rgba(240,82,82,0.3);  color: #fca5a5; }
     .alert-success { background: rgba(61,220,110,0.08); border: 1px solid rgba(61,220,110,0.3); color: var(--green); }
     .modal-actions { display: flex; gap: 10px; margin-top: 6px; padding-bottom: 8px; }
     .btn-cancel { flex: 1; background: none; border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: var(--muted); font-size: 14px; cursor: pointer; font-family: inherit; font-weight: 600; }
     .btn-pay { flex: 2; background: linear-gradient(135deg, #1a7a35, var(--green)); border: none; border-radius: 12px; padding: 14px; color: #021a09; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
     .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(2,26,9,0.3); border-top-color: #021a09; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+
+    /* ── SUCCESS SCREEN ── */
     .success-screen { text-align: center; padding: 30px 20px 24px; }
     .success-icon { width: 72px; height: 72px; background: linear-gradient(135deg, #1a7a35, var(--green)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 18px; }
+    .success-icon.initializing { background: linear-gradient(135deg, #1a4a7a, var(--blue)); }
     .success-screen h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
     .success-screen p  { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 6px; }
     .order-code { display: inline-block; background: var(--green-glow); border: 1px solid var(--green-dim); border-radius: 10px; padding: 8px 20px; font-size: 18px; font-weight: 800; font-family: monospace; color: var(--green); margin: 10px 0 20px; letter-spacing: 1px; }
     .btn-continue { width: 100%; background: linear-gradient(135deg, #1a7a35, var(--green)); border: none; border-radius: 12px; padding: 14px; color: #021a09; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+    /* ── PAYMENT STATUS POLLING BOX ── */
+    .payment-status-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 14px 0 20px; }
+    .payment-status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .payment-status-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .payment-status-value { font-size: 13px; font-weight: 700; }
+    .status-initializing { color: var(--blue); }
+    .status-pending      { color: var(--amber); }
+    .status-paid         { color: var(--green); }
+    .status-failed       { color: var(--red); }
+    .polling-hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
     @media (min-width: 768px) {
       .shop-header { padding: 30px 24px 22px; }
@@ -235,11 +226,12 @@
       @keyframes slide-up { from { opacity: 0; transform: scale(0.96) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
       .modal-handle { display: none; }
     }
+    
   </style>
 </head>
 <body>
 
-  <!-- ── GREETING HEADER ── -->
+  <!-- ── HEADER ── -->
   <div class="shop-header">
     <div class="header-logo-row">
       <div class="header-logo-icon">🌱</div>
@@ -255,11 +247,11 @@
     </div>
     <div class="greeting-label" id="greetingLabel">Good Morning</div>
     <div class="greeting-name" id="greetingName">Welcome back, <span id="greetingUser">Farmer</span> 👋</div>
-    <div class="greeting-sub" id="greetingSub">What supplies do you need today?</div>
+    <div class="greeting-sub">What supplies do you need today?</div>
   </div>
 
   <!-- ── CATEGORY FILTER ── -->
-  <div class="filter-bar" id="filterBar">
+  <div class="filter-bar">
     <button class="filter-chip active" onclick="setCategory('all', this)">🌍 All</button>
     <button class="filter-chip" onclick="setCategory('Seeds', this)">🌱 Seeds</button>
     <button class="filter-chip" onclick="setCategory('Fertilizer', this)">🧪 Fertilizer</button>
@@ -284,9 +276,10 @@
     </div>
   </div>
 
-  <!-- OVERLAYS & DRAWERS -->
+  <!-- OVERLAYS -->
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeAll()"></div>
 
+  <!-- ── CART DRAWER ── -->
   <div class="cart-drawer" id="cartDrawer">
     <div class="drawer-head">
       <h2>🛒 Your Cart</h2>
@@ -299,6 +292,7 @@
     </div>
   </div>
 
+  <!-- ── ORDERS DRAWER ── -->
   <div class="orders-drawer" id="ordersDrawer">
     <div class="drawer-head">
       <h2>📋 My Orders</h2>
@@ -309,10 +303,12 @@
     </div>
   </div>
 
-  <!-- CHECKOUT MODAL -->
+  <!-- ── CHECKOUT MODAL ── -->
   <div class="modal-overlay" id="checkoutModal">
     <div class="modal">
       <div class="modal-handle"></div>
+
+      <!-- CHECKOUT FORM -->
       <div id="checkoutContent">
         <div class="modal-head">
           <h2>🧾 Checkout</h2>
@@ -325,37 +321,90 @@
             <div class="summary-total"><span>Total</span><span id="summaryTotal">KES 0</span></div>
           </div>
           <div class="form-group"><label>Full Name *</label><input type="text" id="ckName" placeholder="Your full name" /></div>
-          <div class="form-group"><label>Phone *</label><input type="tel" id="ckPhone" placeholder="07XX XXX XXX" /></div>
+          <div class="form-group"><label>Phone Number *</label><input type="tel" id="ckPhone" placeholder="07XX XXX XXX" /></div>
           <div class="form-group"><label>Email</label><input type="email" id="ckEmail" placeholder="you@example.com" /></div>
+
           <div class="pay-section-title">Payment Method</div>
           <div class="pay-methods">
-            <div class="pay-method active" id="pm-mpesa-stk" onclick="selectPayment('mpesa-stk')"><div class="pay-method-icon">📱</div><div class="pay-method-name">M-Pesa STK</div></div>
-            <div class="pay-method" id="pm-mpesa-manual" onclick="selectPayment('mpesa-manual')"><div class="pay-method-icon">📝</div><div class="pay-method-name">M-Pesa Manual</div></div>
-            <div class="pay-method" id="pm-card" onclick="selectPayment('card')"><div class="pay-method-icon">💳</div><div class="pay-method-name">Card</div></div>
-            <div class="pay-method" id="pm-cash" onclick="selectPayment('cash')"><div class="pay-method-icon">💵</div><div class="pay-method-name">Cash on Delivery</div></div>
+            <div class="pay-method active" id="pm-mpesa-stk"    onclick="selectPayment('mpesa-stk')"><div class="pay-method-icon">📱</div><div class="pay-method-name">M-Pesa STK</div></div>
+            <div class="pay-method"        id="pm-mpesa-manual" onclick="selectPayment('mpesa-manual')"><div class="pay-method-icon">📝</div><div class="pay-method-name">M-Pesa Manual</div></div>
+            <div class="pay-method"        id="pm-card"         onclick="selectPayment('card')"><div class="pay-method-icon">💳</div><div class="pay-method-name">Card</div></div>
+            <div class="pay-method"        id="pm-cash"         onclick="selectPayment('cash')"><div class="pay-method-icon">💵</div><div class="pay-method-name">Cash on Delivery</div></div>
           </div>
-          <div class="pay-panel show" id="panel-mpesa-stk"><div class="info-box green"><p>A payment prompt will be sent to your M-Pesa number. Enter your <strong>M-Pesa PIN</strong> to confirm.</p></div></div>
-          <div class="pay-panel" id="panel-mpesa-manual"><div class="info-box green"><p>Send payment to <strong>Till/Paybill: 174379</strong><br>Account: <strong>Agricore</strong><br>Then enter your M-Pesa code below.</p></div><div class="form-group"><label>M-Pesa Code *</label><input type="text" id="mpesaCode" placeholder="e.g. QGH7K3X0P1" style="text-transform:uppercase;letter-spacing:1px;font-family:monospace;" /></div></div>
-          <div class="pay-panel" id="panel-card"><div class="info-box blue"><p>Enter your card details. All transactions are <strong>secured and encrypted</strong>.</p></div><div class="form-group"><label>Card Number *</label><input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCard(this)" /></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group"><label>Expiry *</label><input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)" /></div><div class="form-group"><label>CVV *</label><input type="password" id="cardCvv" placeholder="•••" maxlength="4" /></div></div><div class="form-group"><label>Name on Card *</label><input type="text" id="cardName" placeholder="As printed on card" /></div></div>
-          <div class="pay-panel" id="panel-cash"><div class="info-box amber"><p>Pay <strong>cash on delivery</strong>. Our agent will contact you to arrange delivery.</p></div></div>
+
+          <!-- STK Panel -->
+          <div class="pay-panel show" id="panel-mpesa-stk">
+            <div class="info-box green">
+              <p>A payment prompt will be sent to your M-Pesa number. Enter your <strong>M-Pesa PIN</strong> to confirm.</p>
+            </div>
+          </div>
+
+          <!-- Manual Panel -->
+          <div class="pay-panel" id="panel-mpesa-manual">
+            <div class="info-box green">
+              <p>Send payment to <strong>Till/Paybill: 174379</strong><br>Account: <strong>Agricore</strong><br>Then enter your M-Pesa code below.</p>
+            </div>
+            <div class="form-group">
+              <label>M-Pesa Code *</label>
+              <input type="text" id="mpesaCode" placeholder="e.g. QGH7K3X0P1" style="text-transform:uppercase;letter-spacing:1px;font-family:monospace;" />
+            </div>
+          </div>
+
+          <!-- Card Panel -->
+          <div class="pay-panel" id="panel-card">
+            <div class="info-box blue">
+              <p>Enter your card details. All transactions are <strong>secured and encrypted</strong>.</p>
+            </div>
+            <div class="form-group"><label>Card Number *</label><input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCard(this)" /></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group"><label>Expiry *</label><input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)" /></div>
+              <div class="form-group"><label>CVV *</label><input type="password" id="cardCvv" placeholder="•••" maxlength="4" /></div>
+            </div>
+            <div class="form-group"><label>Name on Card *</label><input type="text" id="cardName" placeholder="As printed on card" /></div>
+          </div>
+
+          <!-- Cash Panel -->
+          <div class="pay-panel" id="panel-cash">
+            <div class="info-box amber">
+              <p>Pay <strong>cash on delivery</strong>. Our agent will contact you to arrange delivery.</p>
+            </div>
+          </div>
+
           <div class="alert alert-error"   id="checkoutError"></div>
           <div class="alert alert-success" id="checkoutSuccess"></div>
+
           <div class="modal-actions">
             <button class="btn-cancel" onclick="closeCheckout()">Cancel</button>
             <button class="btn-pay" id="btnPay" onclick="placeOrder()">Send M-Pesa Prompt</button>
           </div>
         </div>
       </div>
+
+      <!-- SUCCESS SCREEN -->
       <div id="successContent" style="display:none;">
         <div class="success-screen">
-          <div class="success-icon">✅</div>
-          <h2>Order Placed!</h2>
-          <p>Your order has been received and is being processed.</p>
+          <div class="success-icon" id="successIcon">⏳</div>
+          <h2 id="successTitle">Order Initializing</h2>
+          <p id="successSubtitle">Your order has been received and is being processed.</p>
           <div class="order-code" id="successOrderId">#000000</div>
+
+          <!-- Payment status box (shown for STK only) -->
+          <div class="payment-status-box" id="paymentStatusBox" style="display:none;">
+            <div class="payment-status-row">
+              <span class="payment-status-label">Payment Status:</span>
+              <span class="payment-status-value" id="paymentStatusValue">Initializing…</span>
+            </div>
+            <div class="polling-hint" id="pollingHint">
+              📱 A prompt has been sent to <strong id="promptPhone"></strong>.<br>
+              Enter your M-Pesa PIN on your phone to complete payment.
+            </div>
+          </div>
+
           <p id="successPayInfo" style="font-size:13px;color:var(--muted);margin-bottom:20px;"></p>
           <button class="btn-continue" onclick="orderDone()">Continue Shopping</button>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -363,34 +412,35 @@
     const API   = "http://localhost:5001/api";
     const token = sessionStorage.getItem("token");
 
-    // Safe parse
     function safeParse(str) {
       if (!str || str === 'undefined' || str === 'null') return {};
       try { return JSON.parse(str); } catch { return {}; }
     }
     const user = safeParse(sessionStorage.getItem("user"));
-
     if (!token) { window.location.href = "index.html"; }
 
-    // Set greeting
-    (function setGreeting() {
-      const hour = new Date().getHours();
+    // ── GREETING ──
+    (function() {
+      const hour  = new Date().getHours();
       const greet = hour < 12 ? "Good Morning ☀️" : hour < 17 ? "Good Afternoon 🌤️" : "Good Evening 🌙";
       document.getElementById("greetingLabel").textContent = greet;
-      const firstName = (user.name || user.email || "Farmer").split(" ")[0];
-      document.getElementById("greetingUser").textContent = firstName;
+      document.getElementById("greetingUser").textContent  = (user.name || user.email || "Farmer").split(" ")[0];
     })();
 
     function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
 
+    // ── STATE ──
     let products = [], cart = {}, activeCategory = "all", paymentMethod = "mpesa-stk";
+    let pollInterval = null, currentOrderId = null, currentPhone = "";
+
     const EMOJI = { Seeds:"🌱", Fertilizer:"🧪", Pesticides:"🛡️", Equipment:"⚙️", Produce:"🥬", Feeds:"📦", General:"🌾" };
 
+    // ── PRODUCTS ──
     async function loadProducts() {
       document.getElementById("productsGrid").innerHTML = `<div class="spinner-box"><div class="spinner"></div><p>Loading products...</p></div>`;
       try {
         const res = await fetch(`${API}/products`);
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        if (!res.ok) throw new Error();
         products = await res.json();
         renderProducts();
       } catch {
@@ -401,7 +451,8 @@
     function setCategory(cat, el) {
       activeCategory = cat;
       document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
-      el.classList.add("active"); renderProducts();
+      el.classList.add("active");
+      renderProducts();
     }
 
     function renderProducts() {
@@ -413,101 +464,337 @@
       });
       const label = activeCategory === "all" ? "All Products" : `${EMOJI[activeCategory]||""} ${activeCategory}`;
       document.getElementById("sectionLabel").textContent = `${label} (${filtered.length})`;
-      if (!filtered.length) { document.getElementById("productsGrid").innerHTML = `<div class="state-box"><div class="icon">🔍</div><p>No products found.</p></div>`; return; }
+      if (!filtered.length) {
+        document.getElementById("productsGrid").innerHTML = `<div class="state-box"><div class="icon">🔍</div><p>No products found.</p></div>`;
+        return;
+      }
       document.getElementById("productsGrid").innerHTML = filtered.map(p => {
         const inCart   = cart[p._id];
         const stockCls = p.stock === 0 ? "stock-out" : p.stock <= 10 ? "stock-low" : "stock-in";
         const stockLbl = p.stock === 0 ? "Out of Stock" : p.stock <= 10 ? `Low (${p.stock})` : "In Stock";
         const imgHtml  = p.image ? `<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">` : "";
-        const emoji = EMOJI[p.category] || "📦";
-        const actionHtml = p.stock === 0
+        const emoji    = EMOJI[p.category] || "📦";
+        const action   = p.stock === 0
           ? `<button class="btn-add" disabled>Unavailable</button>`
           : inCart
             ? `<div class="qty-stepper"><button class="qty-btn" onclick="changeQty('${p._id}',-1,event)">−</button><span class="qty-num">${inCart.qty}</span><button class="qty-btn" onclick="changeQty('${p._id}',1,event)">+</button></div>`
             : `<button class="btn-add" onclick="addToCart('${p._id}',event)">+ Add</button>`;
-        return `<div class="product-card"><div class="product-img">${emoji}${imgHtml}</div><div class="product-body"><div class="product-cat">${p.category||"General"}</div><div class="product-name">${p.name}</div><div class="product-footer"><div><div class="product-price">KES ${Number(p.price).toLocaleString()}</div><div class="product-unit">per ${p.unit||"unit"}</div></div><div onclick="event.stopPropagation()">${actionHtml}</div></div><div style="margin-top:8px;"><span class="stock-badge ${stockCls}">${stockLbl}</span></div></div></div>`;
+        return `<div class="product-card">
+          <div class="product-img">${emoji}${imgHtml}</div>
+          <div class="product-body">
+            <div class="product-cat">${p.category||"General"}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-footer">
+              <div>
+                <div class="product-price">KES ${Number(p.price).toLocaleString()}</div>
+                <div class="product-unit">per ${p.unit||"unit"}</div>
+              </div>
+              <div onclick="event.stopPropagation()">${action}</div>
+            </div>
+            <div style="margin-top:8px;"><span class="stock-badge ${stockCls}">${stockLbl}</span></div>
+          </div>
+        </div>`;
       }).join("");
     }
 
-    function addToCart(id, e) { if (e) e.stopPropagation(); const p = products.find(p => p._id === id); if (!p || p.stock === 0) return; cart[id] = { product: p, qty: 1 }; updateCartBadge(); renderProducts(); }
-    function changeQty(id, delta, e) { if (e) e.stopPropagation(); if (!cart[id]) return; const newQty = cart[id].qty + delta; if (newQty <= 0) { delete cart[id]; } else if (newQty <= cart[id].product.stock) { cart[id].qty = newQty; } updateCartBadge(); renderProducts(); renderCart(); }
-    function updateCartBadge() { const total = Object.values(cart).reduce((s,c) => s+c.qty, 0); const badge = document.getElementById("cartBadge"); badge.textContent = total; total > 0 ? badge.classList.add("show") : badge.classList.remove("show"); }
+    // ── CART ──
+    function addToCart(id, e) {
+      if (e) e.stopPropagation();
+      const p = products.find(p => p._id === id);
+      if (!p || p.stock === 0) return;
+      cart[id] = { product: p, qty: 1 };
+      updateCartBadge(); renderProducts();
+    }
+    function changeQty(id, delta, e) {
+      if (e) e.stopPropagation();
+      if (!cart[id]) return;
+      const newQty = cart[id].qty + delta;
+      if (newQty <= 0) { delete cart[id]; }
+      else if (newQty <= cart[id].product.stock) { cart[id].qty = newQty; }
+      updateCartBadge(); renderProducts(); renderCart();
+    }
+    function updateCartBadge() {
+      const total = Object.values(cart).reduce((s,c) => s+c.qty, 0);
+      const badge = document.getElementById("cartBadge");
+      badge.textContent = total;
+      total > 0 ? badge.classList.add("show") : badge.classList.remove("show");
+    }
     function cartTotal() { return Object.values(cart).reduce((s,c) => s+c.product.price*c.qty, 0); }
 
     function renderCart() {
-      const items = Object.values(cart), el = document.getElementById("cartItems"), footer = document.getElementById("cartFooter");
-      if (!items.length) { el.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p>Your cart is empty.</p></div>`; footer.style.display = "none"; return; }
-      el.innerHTML = items.map(({product:p,qty}) => { const imgHtml = p.image ? `<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">` : ""; return `<div class="cart-item"><div class="cart-item-img">${EMOJI[p.category]||"📦"}${imgHtml}</div><div class="cart-item-info"><div class="cart-item-name">${p.name}</div><div class="cart-item-price">KES ${(p.price*qty).toLocaleString()} (×${qty})</div></div><div class="cart-item-actions"><button class="qty-btn" onclick="changeQty('${p._id}',-1,event)">−</button><span class="qty-num">${qty}</span><button class="qty-btn" onclick="changeQty('${p._id}',1,event)">+</button></div></div>`; }).join("");
-      document.getElementById("cartTotal").textContent = `KES ${cartTotal().toLocaleString()}`; footer.style.display = "block";
+      const items  = Object.values(cart);
+      const el     = document.getElementById("cartItems");
+      const footer = document.getElementById("cartFooter");
+      if (!items.length) {
+        el.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p>Your cart is empty.</p></div>`;
+        footer.style.display = "none"; return;
+      }
+      el.innerHTML = items.map(({product:p,qty}) => {
+        const img = p.image ? `<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">` : "";
+        return `<div class="cart-item">
+          <div class="cart-item-img">${EMOJI[p.category]||"📦"}${img}</div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${p.name}</div>
+            <div class="cart-item-price">KES ${(p.price*qty).toLocaleString()} (×${qty})</div>
+          </div>
+          <div class="cart-item-actions">
+            <button class="qty-btn" onclick="changeQty('${p._id}',-1,event)">−</button>
+            <span class="qty-num">${qty}</span>
+            <button class="qty-btn" onclick="changeQty('${p._id}',1,event)">+</button>
+          </div>
+        </div>`;
+      }).join("");
+      document.getElementById("cartTotal").textContent = `KES ${cartTotal().toLocaleString()}`;
+      footer.style.display = "block";
     }
 
     function openCart()  { renderCart(); document.getElementById("cartDrawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); }
     function closeCart() { document.getElementById("cartDrawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); }
 
+    // ── ORDERS ──
     async function openMyOrders() {
-      document.getElementById("ordersDrawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open");
+      document.getElementById("ordersDrawer").classList.add("open");
+      document.getElementById("drawerOverlay").classList.add("open");
       document.getElementById("ordersList").innerHTML = `<div class="spinner-box"><div class="spinner"></div><p>Loading your orders...</p></div>`;
       try {
-        const res = await fetch(`${API}/orders/my`, { headers: { Authorization: `Bearer ${token}` } });
+        const res    = await fetch(`${API}/orders/my`, { headers: { Authorization: `Bearer ${token}` } });
         const orders = await res.json();
-        if (!orders.length) { document.getElementById("ordersList").innerHTML = `<div class="cart-empty"><div class="icon">📋</div><p>You have no orders yet.</p></div>`; return; }
+        if (!orders.length) {
+          document.getElementById("ordersList").innerHTML = `<div class="cart-empty"><div class="icon">📋</div><p>You have no orders yet.</p></div>`;
+          return;
+        }
         document.getElementById("ordersList").innerHTML = orders.map(o => {
-          const date = new Date(o.createdAt).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"});
-          const statCls = o.status === "completed" ? "badge-completed" : "badge-pending";
-          const payCls  = o.paymentStatus === "paid" ? "badge-paid" : "badge-pending";
+          const date    = new Date(o.createdAt).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"});
+          const statCls = `badge-${o.status}`;
+          const payCls  = `badge-${o.paymentStatus}`;
           const names   = (o.items||[]).slice(0,2).map(i => i.productName).join(", ");
           const more    = o.items?.length > 2 ? ` +${o.items.length-2} more` : "";
-          return `<div class="order-card"><div class="order-card-top"><span class="order-id">#${String(o._id).slice(-6).toUpperCase()}</span><span class="order-date">${date}</span></div><div class="order-items-text">${names}${more}</div><div class="order-card-bottom"><span class="order-amount">KES ${Number(o.totalAmount).toLocaleString()}</span><div style="display:flex;gap:6px;"><span class="order-badge ${payCls}">${o.paymentStatus}</span><span class="order-badge ${statCls}">${o.status}</span></div></div></div>`;
+          const statusLabel = o.status === "initializing" ? "⏳ Initializing" : o.status === "completed" ? "✅ Completed" : "🕐 Pending";
+          const payLabel    = o.paymentStatus === "paid" ? "✅ Paid" : o.paymentStatus === "failed" ? "❌ Failed" : "⏳ Pending";
+          return `<div class="order-card">
+            <div class="order-card-top">
+              <span class="order-id">#${String(o._id).slice(-6).toUpperCase()}</span>
+              <span class="order-date">${date}</span>
+            </div>
+            <div class="order-items-text">${names}${more}</div>
+            <div class="order-card-bottom">
+              <span class="order-amount">KES ${Number(o.totalAmount).toLocaleString()}</span>
+              <div style="display:flex;gap:6px;">
+                <span class="order-badge ${payCls}">${payLabel}</span>
+                <span class="order-badge ${statCls}">${statusLabel}</span>
+              </div>
+            </div>
+          </div>`;
         }).join("");
-      } catch { document.getElementById("ordersList").innerHTML = `<div class="cart-empty"><div class="icon">⚠️</div><p>Could not load orders.</p></div>`; }
+      } catch {
+        document.getElementById("ordersList").innerHTML = `<div class="cart-empty"><div class="icon">⚠️</div><p>Could not load orders.</p></div>`;
+      }
     }
     function closeMyOrders() { document.getElementById("ordersDrawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); }
     function closeAll() { closeCart(); closeMyOrders(); }
 
+    // ── CHECKOUT ──
     function openCheckout() {
-      const items = Object.values(cart); if (!items.length) return;
-      document.getElementById("ckName").value  = user.name  || ""; document.getElementById("ckEmail").value = user.email || "";
-      document.getElementById("summaryItems").innerHTML = items.map(({product:p,qty}) => `<div class="summary-item"><span>${p.name} ×${qty}</span><span>KES ${(p.price*qty).toLocaleString()}</span></div>`).join("");
+      const items = Object.values(cart);
+      if (!items.length) return;
+      document.getElementById("ckName").value  = user.name  || "";
+      document.getElementById("ckEmail").value = user.email || "";
+      document.getElementById("ckPhone").value = "";
+      document.getElementById("summaryItems").innerHTML = items.map(({product:p,qty}) =>
+        `<div class="summary-item"><span>${p.name} ×${qty}</span><span>KES ${(p.price*qty).toLocaleString()}</span></div>`
+      ).join("");
       document.getElementById("summaryTotal").textContent = `KES ${cartTotal().toLocaleString()}`;
-      document.getElementById("checkoutError").classList.remove("show"); document.getElementById("checkoutSuccess").classList.remove("show");
-      document.getElementById("checkoutContent").style.display = "block"; document.getElementById("successContent").style.display = "none";
-      closeCart(); document.getElementById("checkoutModal").classList.add("open");
+      document.getElementById("checkoutError").classList.remove("show");
+      document.getElementById("checkoutContent").style.display = "block";
+      document.getElementById("successContent").style.display  = "none";
+      closeCart();
+      document.getElementById("checkoutModal").classList.add("open");
     }
-    function closeCheckout() { document.getElementById("checkoutModal").classList.remove("open"); }
+
+    function closeCheckout() {
+      stopPolling();
+      document.getElementById("checkoutModal").classList.remove("open");
+    }
 
     function selectPayment(method) {
       paymentMethod = method;
-      ["mpesa-stk","mpesa-manual","card","cash"].forEach(m => { document.getElementById(`pm-${m}`).classList.toggle("active", m === method); document.getElementById(`panel-${m}`).classList.toggle("show", m === method); });
-      document.getElementById("btnPay").textContent = method === "mpesa-stk" ? "Send M-Pesa Prompt" : method === "mpesa-manual" ? "Confirm Payment" : method === "card" ? "Pay with Card" : "Place Order (Cash)";
+      ["mpesa-stk","mpesa-manual","card","cash"].forEach(m => {
+        document.getElementById(`pm-${m}`).classList.toggle("active", m === method);
+        document.getElementById(`panel-${m}`).classList.toggle("show", m === method);
+      });
+      const labels = { "mpesa-stk": "Send M-Pesa Prompt", "mpesa-manual": "Confirm Payment", "card": "Pay with Card", "cash": "Place Order (Cash)" };
+      document.getElementById("btnPay").textContent = labels[method];
     }
 
+    // ── PLACE ORDER ──
     async function placeOrder() {
-      const name = document.getElementById("ckName").value.trim(), phone = document.getElementById("ckPhone").value.trim(), email = document.getElementById("ckEmail").value.trim(), errEl = document.getElementById("checkoutError");
+      const name  = document.getElementById("ckName").value.trim();
+      const phone = document.getElementById("ckPhone").value.trim();
+      const email = document.getElementById("ckEmail").value.trim();
+      const errEl = document.getElementById("checkoutError");
       errEl.classList.remove("show");
+
+      // Validate
       if (!name || !phone) { errEl.textContent = "Please enter your name and phone number."; errEl.classList.add("show"); return; }
       if (!/^(07|01|\+254)\d{8,9}$/.test(phone.replace(/\s/g,""))) { errEl.textContent = "Enter a valid Kenyan phone number (07XX or 01XX)."; errEl.classList.add("show"); return; }
       if (paymentMethod === "mpesa-manual") { const code = document.getElementById("mpesaCode").value.trim(); if (!code) { errEl.textContent = "Please enter the M-Pesa confirmation code."; errEl.classList.add("show"); return; } }
-      if (paymentMethod === "card") { const num = document.getElementById("cardNumber").value.replace(/\s/g,""), exp = document.getElementById("cardExpiry").value, cvv = document.getElementById("cardCvv").value, cname = document.getElementById("cardName").value.trim(); if (num.length < 16 || !exp || cvv.length < 3 || !cname) { errEl.textContent = "Please fill in all card details correctly."; errEl.classList.add("show"); return; } }
-      const btn = document.getElementById("btnPay"); btn.disabled = true; btn.innerHTML = '<span class="btn-spin"></span>Processing...';
-      const items = Object.values(cart).map(({product:p,qty}) => ({ productId: p._id, productName: p.name, price: p.price, quantity: qty }));
-      const orderData = { customer: {name,email,phone}, items, totalAmount: cartTotal(), paymentStatus: "pending", mpesaCode: paymentMethod === "mpesa-manual" ? document.getElementById("mpesaCode").value.trim().toUpperCase() : "", status: "pending", paymentMethod };
+      if (paymentMethod === "card") {
+        const num = document.getElementById("cardNumber").value.replace(/\s/g,""), exp = document.getElementById("cardExpiry").value, cvv = document.getElementById("cardCvv").value, cname = document.getElementById("cardName").value.trim();
+        if (num.length < 16 || !exp || cvv.length < 3 || !cname) { errEl.textContent = "Please fill in all card details correctly."; errEl.classList.add("show"); return; }
+      }
+
+      const btn = document.getElementById("btnPay");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-spin"></span>Processing...';
+
+      const items = Object.values(cart).map(({product:p,qty}) => ({
+        productId: p._id, productName: p.name, price: p.price, quantity: qty
+      }));
+
+      const orderData = {
+        customer: { name, email, phone },
+        items,
+        totalAmount:   cartTotal(),
+        paymentStatus: "pending",
+        mpesaCode:     paymentMethod === "mpesa-manual" ? document.getElementById("mpesaCode").value.trim().toUpperCase() : "",
+        status:        "initializing",
+        paymentMethod,
+      };
+
       try {
-        const res = await fetch(`${API}/orders`, { method:"POST", headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`}, body: JSON.stringify(orderData) });
-        const order = await res.json(); if (!res.ok) throw new Error(order.message || "Failed to place order.");
-        if (paymentMethod === "mpesa-stk") { try { await fetch(`${API}/mpesa/pay`, { method:"POST", headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`}, body: JSON.stringify({phone,amount:cartTotal(),orderId:order._id}) }); } catch {} }
+        // 1. Save order
+        const res   = await fetch(`${API}/orders`, { method:"POST", headers:{"Content-Type":"application/json", Authorization:`Bearer ${token}`}, body: JSON.stringify(orderData) });
+        const order = await res.json();
+        if (!res.ok) throw new Error(order.message || "Failed to place order.");
+
+        currentOrderId = order._id;
+        currentPhone   = phone;
+
+        // 2. Show success screen immediately (order is initializing)
         document.getElementById("successOrderId").textContent = `#${String(order._id).slice(-6).toUpperCase()}`;
-        document.getElementById("successPayInfo").textContent = paymentMethod==="mpesa-stk" ? "📱 M-Pesa prompt sent. Enter your PIN to complete payment." : paymentMethod==="mpesa-manual" ? `📝 Code ${orderData.mpesaCode} recorded.` : paymentMethod==="card" ? "💳 Card payment processed." : "💵 Cash on delivery. Our agent will contact you shortly.";
-        document.getElementById("checkoutContent").style.display = "none"; document.getElementById("successContent").style.display = "block";
-        cart = {}; updateCartBadge();
-      } catch (err) { errEl.textContent = err.message; errEl.classList.add("show"); }
-      finally { btn.disabled = false; selectPayment(paymentMethod); }
+        document.getElementById("checkoutContent").style.display = "none";
+        document.getElementById("successContent").style.display  = "block";
+
+        // 3. Handle per payment method
+        if (paymentMethod === "mpesa-stk") {
+          // Show initializing state
+          document.getElementById("successIcon").textContent   = "⏳";
+          document.getElementById("successIcon").className     = "success-icon initializing";
+          document.getElementById("successTitle").textContent  = "Order Initializing";
+          document.getElementById("successSubtitle").textContent = "Sending M-Pesa prompt to your phone...";
+          document.getElementById("paymentStatusBox").style.display = "block";
+          document.getElementById("promptPhone").textContent   = phone;
+          document.getElementById("paymentStatusValue").textContent = "Initializing…";
+          document.getElementById("paymentStatusValue").className   = "payment-status-value status-initializing";
+          document.getElementById("successPayInfo").textContent = "";
+
+          // 4. Fire STK push
+          const stkRes  = await fetch(`${API}/mpesa/pay`, { method:"POST", headers:{"Content-Type":"application/json", Authorization:`Bearer ${token}`}, body: JSON.stringify({ phone, amount: cartTotal(), orderId: order._id }) });
+          const stkData = await stkRes.json();
+
+          if (!stkRes.ok) {
+            // STK failed — update UI
+            document.getElementById("successIcon").textContent   = "❌";
+            document.getElementById("successTitle").textContent  = "Payment Failed";
+            document.getElementById("successSubtitle").textContent = stkData.message || "M-Pesa prompt could not be sent. You can retry from your orders.";
+            document.getElementById("paymentStatusValue").textContent = "Failed";
+            document.getElementById("paymentStatusValue").className   = "payment-status-value status-failed";
+            document.getElementById("pollingHint").textContent = "The M-Pesa prompt was not sent. Check your phone number and try again.";
+          } else {
+            // STK sent — update UI and start polling
+            document.getElementById("successIcon").textContent   = "📱";
+            document.getElementById("successTitle").textContent  = "Awaiting Payment";
+            document.getElementById("successSubtitle").textContent = "Order received. Waiting for your M-Pesa PIN.";
+            document.getElementById("paymentStatusValue").textContent = "Awaiting PIN…";
+            document.getElementById("paymentStatusValue").className   = "payment-status-value status-pending";
+            startPolling(order._id);
+          }
+
+        } else {
+          // Non-STK methods
+          document.getElementById("successIcon").textContent   = "✅";
+          document.getElementById("successIcon").className     = "success-icon";
+          document.getElementById("successTitle").textContent  = "Order Placed!";
+          document.getElementById("successSubtitle").textContent = "Your order has been received and is being processed.";
+          document.getElementById("paymentStatusBox").style.display = "none";
+          document.getElementById("successPayInfo").textContent =
+            paymentMethod === "mpesa-manual" ? `📝 Code ${orderData.mpesaCode} recorded.` :
+            paymentMethod === "card"         ? "💳 Card payment processed." :
+            "💵 Cash on delivery. Our agent will contact you shortly.";
+        }
+
+        cart = {};
+        updateCartBadge();
+
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add("show");
+        document.getElementById("checkoutContent").style.display = "block";
+        document.getElementById("successContent").style.display  = "none";
+      } finally {
+        btn.disabled = false;
+        selectPayment(paymentMethod);
+      }
     }
 
-    function orderDone() { closeCheckout(); renderProducts(); }
+    // ── PAYMENT POLLING ──
+    function startPolling(orderId) {
+      stopPolling();
+      let attempts = 0;
+      const maxAttempts = 24; // poll for 2 minutes (every 5s)
+
+      pollInterval = setInterval(async () => {
+        attempts++;
+        try {
+          const res  = await fetch(`${API}/orders/${orderId}/status`, { headers: { Authorization: `Bearer ${token}` } });
+          const data = await res.json();
+
+          if (data.paymentStatus === "paid") {
+            stopPolling();
+            document.getElementById("successIcon").textContent   = "✅";
+            document.getElementById("successIcon").className     = "success-icon";
+            document.getElementById("successTitle").textContent  = "Payment Confirmed!";
+            document.getElementById("successSubtitle").textContent = "Your M-Pesa payment was received.";
+            document.getElementById("paymentStatusValue").textContent = "✅ Paid";
+            document.getElementById("paymentStatusValue").className   = "payment-status-value status-paid";
+            document.getElementById("pollingHint").textContent = `M-Pesa code: ${data.mpesaCode || "confirmed"}`;
+
+          } else if (data.paymentStatus === "failed") {
+            stopPolling();
+            document.getElementById("successIcon").textContent   = "❌";
+            document.getElementById("successTitle").textContent  = "Payment Failed";
+            document.getElementById("successSubtitle").textContent = "The M-Pesa payment was not completed.";
+            document.getElementById("paymentStatusValue").textContent = "❌ Failed";
+            document.getElementById("paymentStatusValue").className   = "payment-status-value status-failed";
+            document.getElementById("pollingHint").textContent = "Payment was cancelled or timed out. You can retry from your orders.";
+          }
+
+          if (attempts >= maxAttempts) {
+            stopPolling();
+            document.getElementById("pollingHint").textContent = "Payment check timed out. Check your orders page to see if payment was received.";
+          }
+        } catch { /* silent */ }
+      }, 5000);
+    }
+
+    function stopPolling() {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    }
+
+    function orderDone() { stopPolling(); closeCheckout(); renderProducts(); }
+
+    // ── UTILS ──
     function formatCard(el)   { let v = el.value.replace(/\D/g,"").slice(0,16); el.value = v.replace(/(\d{4})(?=\d)/g,"$1 "); }
     function formatExpiry(el) { let v = el.value.replace(/\D/g,"").slice(0,4); if (v.length >= 2) v = v.slice(0,2)+"/"+v.slice(2); el.value = v; }
 
     loadProducts();
   </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log('✅ Service Worker registered'))
+      .catch(err => console.log('❌ SW error:', err));
+  }
+</script>
 </body>
 </html>
