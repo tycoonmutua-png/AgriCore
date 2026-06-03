@@ -1,5 +1,5 @@
 // ============================================================
-// AGRICORE — server.js  (complete & updated)
+// AGRICORE — server.js  (complete & updated with Cloudinary)
 // ============================================================
 
 const express  = require("express");
@@ -8,6 +8,9 @@ const bcrypt   = require("bcryptjs");
 const jwt      = require("jsonwebtoken");
 const cors     = require("cors");
 const axios    = require("axios");
+const multer   = require("multer");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 require("dotenv").config();
 
 const app = express();
@@ -19,6 +22,26 @@ app.use(express.json());
 // ── Serve static files (HTML pages) ────────────────────────
 const path = require("path");
 app.use(express.static(path.join(__dirname)));
+
+// ── Cloudinary Config ───────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder:          "agricore-products",
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
 
 // ============================================================
 // DATABASE MODELS
@@ -48,7 +71,7 @@ const ProductSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", ProductSchema);
 
-// ── Order Model — with paymentMethod field ──
+// ── Order Model ──
 const OrderSchema = new mongoose.Schema({
   customer: {
     name:  String,
@@ -62,10 +85,10 @@ const OrderSchema = new mongoose.Schema({
     quantity:    Number,
   }],
   totalAmount:   { type: Number, required: true },
-  paymentStatus: { type: String, default: "pending" },  // pending | paid | failed
-  paymentMethod: { type: String, default: "mpesa-stk" }, // mpesa-stk | mpesa-manual | card | cash
+  paymentStatus: { type: String, default: "pending" },
+  paymentMethod: { type: String, default: "mpesa-stk" },
   mpesaCode:     { type: String, default: "" },
-  status:        { type: String, default: "pending" },   // pending | completed
+  status:        { type: String, default: "pending" },
 }, { timestamps: true });
 
 const Order = mongoose.model("Order", OrderSchema);
@@ -98,6 +121,25 @@ const adminOnly = (req, res, next) => {
     return res.status(403).json({ message: "Admin only" });
   next();
 };
+
+// ============================================================
+// IMAGE UPLOAD ROUTE
+// ============================================================
+
+app.post("/api/upload", protect, adminOnly, upload.single("image"), (req, res) => {
+  try {
+    if (!req.file)
+      return res.status(400).json({ message: "No file uploaded" });
+
+    // Cloudinary gives back the full https:// URL
+    res.json({
+      imageUrl: req.file.path,
+      message:  "Image uploaded to Cloudinary successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Upload failed", error: err.message });
+  }
+});
 
 // ============================================================
 // AUTH ROUTES
@@ -198,10 +240,12 @@ app.post("/api/products", protect, adminOnly, async (req, res) => {
       return res.status(400).json({ message: "Name and price are required" });
 
     const product = await Product.create({
-      name, price, stock: stock || 0,
-      category: category || "General",
-      image: image || "", description: description || "",
-      unit: unit || "unit",
+      name, price,
+      stock:       stock       || 0,
+      category:    category    || "General",
+      image:       image       || "",
+      description: description || "",
+      unit:        unit        || "unit",
     });
     res.status(201).json(product);
   } catch (err) {
@@ -223,9 +267,23 @@ app.put("/api/products/:id", protect, adminOnly, async (req, res) => {
   }
 });
 
-// Delete product — admin only
+// Delete product — admin only (also removes from Cloudinary)
 app.delete("/api/products/:id", protect, adminOnly, async (req, res) => {
   try {
+    const product = await Product.findById(req.params.id);
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
+
+    // Delete from Cloudinary if image exists
+    if (product.image && product.image.includes("cloudinary.com")) {
+      // Extract public_id from URL
+      const parts   = product.image.split("/");
+      const file    = parts[parts.length - 1].split(".")[0];
+      const folder  = parts[parts.length - 2];
+      const publicId = `${folder}/${file}`;
+      await cloudinary.uploader.destroy(publicId);
+    }
+
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });
   } catch (err) {
@@ -237,7 +295,7 @@ app.delete("/api/products/:id", protect, adminOnly, async (req, res) => {
 // ORDER ROUTES
 // ============================================================
 
-// Place order — logged in users
+// Place order
 app.post("/api/orders", protect, async (req, res) => {
   try {
     const {
@@ -264,7 +322,7 @@ app.post("/api/orders", protect, async (req, res) => {
   }
 });
 
-// Get my orders — logged in user
+// Get my orders
 app.get("/api/orders/my", protect, async (req, res) => {
   try {
     const orders = await Order.find({ "customer.email": req.user.email })
@@ -362,7 +420,6 @@ app.post("/api/mpesa/callback", async (req, res) => {
         i => i.Name === "MpesaReceiptNumber"
       )?.Value;
       console.log("✅ M-Pesa payment confirmed:", mpesaCode);
-      // TODO: update order paymentStatus to "paid" using mpesaCode
     } else {
       console.log("❌ M-Pesa payment failed:", result?.ResultDesc);
     }
@@ -388,13 +445,28 @@ app.get("/api/users", protect, adminOnly, async (req, res) => {
 // ============================================================
 // HEALTH CHECK
 // ============================================================
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Agricore server is running" });
 });
 
+// ── Keep Alive ──────────────────────────────────────────────
+const RENDER_URL = process.env.RENDER_URL || "";
+if (RENDER_URL) {
+  setInterval(async () => {
+    try {
+      await axios.get(`${RENDER_URL}/api/health`);
+      console.log("🏓 Keep-alive ping sent");
+    } catch (err) {
+      console.log("⚠️ Keep-alive failed:", err.message);
+    }
+  }, 10 * 60 * 1000);
+}
+
 // ============================================================
 // START SERVER
 // ============================================================
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");

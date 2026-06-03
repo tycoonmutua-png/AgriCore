@@ -130,7 +130,6 @@
     .form-group select option { background: var(--surface); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* ── Image upload area ── */
     .img-upload-area {
       border: 2px dashed var(--border);
       border-radius: 12px;
@@ -295,7 +294,7 @@
             <div class="img-upload-placeholder" id="imgPlaceholder">
               <div class="icon">📸</div>
               <p>Tap to upload image</p>
-              <small>JPG, PNG, WEBP · max 10MB</small>
+              <small>JPG, PNG, WEBP · max 5MB</small>
             </div>
             <img id="imgPreview" class="img-upload-preview" style="display:none" alt="preview" />
             <div class="img-upload-status" id="imgStatus" style="display:none"></div>
@@ -402,7 +401,7 @@
 
     var products = [], orders = [], users = [];
     var editingProductId = null, deletingProductId = null;
-    var uploadedImageUrl = ""; // holds Cloudinary URL after upload
+    var uploadedImageUrl = "";
 
     var EMOJI = { Seeds:"🌱", Fertilizer:"🧪", Pesticides:"🛡️", Equipment:"⚙️", Produce:"🥬", Feeds:"📦", General:"🌾" };
 
@@ -435,16 +434,24 @@
       return '<div class="stat-card"><div class="stat-label">' + label + '</div><div class="stat-value">' + value + '</div><div class="stat-sub">' + sub + '</div></div>';
     }
 
-    // ── IMAGE UPLOAD ──
+    // ── IMAGE UPLOAD ──────────────────────────────────────────
+    // FIX: was data.url — server returns data.imageUrl
     async function handleImageFile(e) {
       var file = e.target.files[0];
       if (!file) return;
 
-      // Show preview immediately
+      // Validate size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setImgStatus("❌ File too large. Max 5MB.", "var(--red)");
+        return;
+      }
+
+      // Show local preview immediately
       var reader = new FileReader();
       reader.onload = function(ev) {
         showImgPreview(ev.target.result);
         setImgStatus("⏳ Uploading to Cloudinary...", "var(--amber)");
+        document.getElementById("imgUploadArea").classList.add("uploading");
       };
       reader.readAsDataURL(file);
 
@@ -455,16 +462,23 @@
         var res = await fetch(API + "/upload", {
           method: "POST",
           headers: { Authorization: "Bearer " + token },
+          // Do NOT set Content-Type — browser sets it with boundary automatically
           body: formData
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.message || "Upload failed");
-        uploadedImageUrl = data.url;
-        document.getElementById("pImage").value = data.url;
-        showImgPreview(data.url);
+
+        // ✅ FIX: server sends imageUrl, not url
+        uploadedImageUrl = data.imageUrl;
+        document.getElementById("pImage").value = data.imageUrl;
+        showImgPreview(data.imageUrl);
+        document.getElementById("imgUploadArea").classList.remove("uploading");
         setImgStatus("✅ Uploaded to Cloudinary", "var(--green)");
-        setTimeout(function() { document.getElementById("imgStatus").style.display = "none"; }, 2000);
+        setTimeout(function() {
+          document.getElementById("imgStatus").style.display = "none";
+        }, 2500);
       } catch(err) {
+        document.getElementById("imgUploadArea").classList.remove("uploading");
         setImgStatus("❌ " + err.message, "var(--red)");
       }
     }
@@ -502,7 +516,7 @@
       el.style.display = "block";
     }
 
-    // ── PRODUCTS ──
+    // ── PRODUCTS ─────────────────────────────────────────────
     async function loadProducts() {
       document.getElementById("productCards").innerHTML = loadingHTML();
       document.getElementById("productsTable").innerHTML = loadingHTML();
@@ -613,7 +627,7 @@
       var stock       = document.getElementById("pStock").value;
       var category    = document.getElementById("pCategory").value;
       var unit        = document.getElementById("pUnit").value;
-      var image       = document.getElementById("pImage").value.trim() || uploadedImageUrl;
+      var image       = uploadedImageUrl || document.getElementById("pImage").value.trim();
       var description = document.getElementById("pDescription").value.trim();
       var errEl       = document.getElementById("productError");
       errEl.classList.remove("show");
@@ -667,7 +681,7 @@
       } catch(e) { alert("Failed to delete product."); }
     }
 
-    // ── ORDERS ──
+    // ── ORDERS ────────────────────────────────────────────────
     async function loadOrders() {
       document.getElementById("orderCards").innerHTML = loadingHTML();
       document.getElementById("ordersTable").innerHTML = loadingHTML();
@@ -756,12 +770,17 @@
 
     async function markComplete(id) {
       try {
-        await fetch(API + "/orders/" + id, { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ status: "completed", paymentStatus: "paid" }) });
-        await loadOrders(); renderStats();
+        await fetch(API + "/orders/" + id, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ status: "completed", paymentStatus: "paid" })
+        });
+        await loadOrders();
+        renderStats();
       } catch(e) { alert("Failed to update order."); }
     }
 
-    // ── USERS ──
+    // ── USERS ─────────────────────────────────────────────────
     async function loadUsers() {
       document.getElementById("userCards").innerHTML = loadingHTML();
       document.getElementById("usersTable").innerHTML = loadingHTML();
@@ -782,7 +801,11 @@
       var filtered = users.filter(function(u) {
         return (u.name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
       });
-      if (!filtered.length) { document.getElementById("userCards").innerHTML = emptyHTML("No users found.", "👥"); document.getElementById("usersTable").innerHTML = emptyHTML("No users found.", "👥"); return; }
+      if (!filtered.length) {
+        document.getElementById("userCards").innerHTML = emptyHTML("No users found.", "👥");
+        document.getElementById("usersTable").innerHTML = emptyHTML("No users found.", "👥");
+        return;
+      }
       document.getElementById("userCards").innerHTML = filtered.map(function(u) {
         var date = new Date(u.createdAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" });
         var roleBadge = u.role === "admin" ? "badge-purple" : "badge-green";
@@ -812,7 +835,12 @@
         var startX = 0, currentX = 0, isDragging = false;
         var THRESHOLD = 80;
         function onStart(e) { startX = e.touches ? e.touches[0].clientX : e.clientX; isDragging = true; row.classList.add("swiping"); }
-        function onMove(e) { if (!isDragging) return; currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX; currentX = Math.max(-140, Math.min(140, currentX)); row.style.transform = "translateX(" + currentX + "px)"; }
+        function onMove(e) {
+          if (!isDragging) return;
+          currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+          currentX = Math.max(-140, Math.min(140, currentX));
+          row.style.transform = "translateX(" + currentX + "px)";
+        }
         function onEnd() {
           if (!isDragging) return; isDragging = false; row.classList.remove("swiping");
           var id = row.dataset.id; var name = row.dataset.name;
