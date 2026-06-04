@@ -2,26 +2,35 @@
 // AGRICORE — server.js  (complete & updated with Cloudinary)
 // ============================================================
 
-const express  = require("express");
-const mongoose = require("mongoose");
-const bcrypt   = require("bcryptjs");
-const jwt      = require("jsonwebtoken");
-const cors     = require("cors");
-const axios    = require("axios");
-const multer   = require("multer");
+const express    = require("express");
+const mongoose   = require("mongoose");
+const bcrypt     = require("bcryptjs");
+const jwt        = require("jsonwebtoken");
+const cors       = require("cors");
+const axios      = require("axios");
+const multer     = require("multer");
+const path       = require("path");
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 require("dotenv").config();
 
-const app = express();
+const app  = express();
+const PORT = process.env.PORT || 5001;
 
 // ── Middleware ──────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
 
 // ── Serve static files (HTML pages) ────────────────────────
-const path = require("path");
 app.use(express.static(path.join(__dirname)));
+
+// ── Explicit HTML routes (fixes Railway 502 on direct URLs) ─
+app.get("/",           (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/shop",       (req, res) => res.sendFile(path.join(__dirname, "shop.html")));
+app.get("/admin",      (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
+app.get("/shop.html",  (req, res) => res.sendFile(path.join(__dirname, "shop.html")));
+app.get("/admin.html", (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
+app.get("/index.html", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 // ── Cloudinary Config ───────────────────────────────────────
 cloudinary.config({
@@ -40,14 +49,13 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 // ============================================================
 // DATABASE MODELS
 // ============================================================
 
-// ── User Model ──
 const UserSchema = new mongoose.Schema({
   name:     { type: String, required: true },
   email:    { type: String, required: true, unique: true },
@@ -58,7 +66,6 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-// ── Product Model ──
 const ProductSchema = new mongoose.Schema({
   name:        { type: String, required: true },
   price:       { type: Number, required: true },
@@ -71,7 +78,6 @@ const ProductSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", ProductSchema);
 
-// ── Order Model ──
 const OrderSchema = new mongoose.Schema({
   customer: {
     name:  String,
@@ -130,8 +136,6 @@ app.post("/api/upload", protect, adminOnly, upload.single("image"), (req, res) =
   try {
     if (!req.file)
       return res.status(400).json({ message: "No file uploaded" });
-
-    // Cloudinary gives back the full https:// URL
     res.json({
       imageUrl: req.file.path,
       message:  "Image uploaded to Cloudinary successfully",
@@ -145,7 +149,6 @@ app.post("/api/upload", protect, adminOnly, upload.single("image"), (req, res) =
 // AUTH ROUTES
 // ============================================================
 
-// Register
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -170,7 +173,6 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-// Login
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -193,7 +195,6 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// Google Login
 app.post("/api/auth/google", async (req, res) => {
   try {
     const { access_token } = req.body;
@@ -222,7 +223,6 @@ app.post("/api/auth/google", async (req, res) => {
 // PRODUCT ROUTES
 // ============================================================
 
-// Get all products — public
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
@@ -232,7 +232,6 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// Add product — admin only
 app.post("/api/products", protect, adminOnly, async (req, res) => {
   try {
     const { name, price, stock, category, image, description, unit } = req.body;
@@ -253,7 +252,6 @@ app.post("/api/products", protect, adminOnly, async (req, res) => {
   }
 });
 
-// Update product — admin only
 app.put("/api/products/:id", protect, adminOnly, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
@@ -267,19 +265,16 @@ app.put("/api/products/:id", protect, adminOnly, async (req, res) => {
   }
 });
 
-// Delete product — admin only (also removes from Cloudinary)
 app.delete("/api/products/:id", protect, adminOnly, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product)
       return res.status(404).json({ message: "Product not found" });
 
-    // Delete from Cloudinary if image exists
     if (product.image && product.image.includes("cloudinary.com")) {
-      // Extract public_id from URL
-      const parts   = product.image.split("/");
-      const file    = parts[parts.length - 1].split(".")[0];
-      const folder  = parts[parts.length - 2];
+      const parts    = product.image.split("/");
+      const file     = parts[parts.length - 1].split(".")[0];
+      const folder   = parts[parts.length - 2];
       const publicId = `${folder}/${file}`;
       await cloudinary.uploader.destroy(publicId);
     }
@@ -295,45 +290,34 @@ app.delete("/api/products/:id", protect, adminOnly, async (req, res) => {
 // ORDER ROUTES
 // ============================================================
 
-// Place order
 app.post("/api/orders", protect, async (req, res) => {
   try {
-    const {
-      customer, items, totalAmount,
-      paymentStatus, paymentMethod, mpesaCode, status
-    } = req.body;
-
+    const { customer, items, totalAmount, paymentStatus, paymentMethod, mpesaCode, status } = req.body;
     if (!customer || !items || !totalAmount)
       return res.status(400).json({ message: "Missing order details" });
 
     const order = await Order.create({
-      customer,
-      items,
-      totalAmount,
+      customer, items, totalAmount,
       paymentStatus: paymentStatus || "pending",
       paymentMethod: paymentMethod || "mpesa-stk",
       mpesaCode:     mpesaCode     || "",
       status:        status        || "pending",
     });
-
     res.status(201).json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get my orders
 app.get("/api/orders/my", protect, async (req, res) => {
   try {
-    const orders = await Order.find({ "customer.email": req.user.email })
-      .sort({ createdAt: -1 });
+    const orders = await Order.find({ "customer.email": req.user.email }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get all orders — admin only
 app.get("/api/orders/all", protect, adminOnly, async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -343,12 +327,9 @@ app.get("/api/orders/all", protect, adminOnly, async (req, res) => {
   }
 });
 
-// Update order — admin only
 app.patch("/api/orders/:id", protect, adminOnly, async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id, req.body, { new: true }
-    );
+    const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!order)
       return res.status(404).json({ message: "Order not found" });
     res.json(order);
@@ -372,10 +353,9 @@ const getMpesaToken = async () => {
   return data.access_token;
 };
 
-// STK Push
 app.post("/api/mpesa/pay", protect, async (req, res) => {
   try {
-    const { phone, amount, orderId } = req.body;
+    const { phone, amount } = req.body;
     const formattedPhone = phone.replace(/\s/g, "").startsWith("0")
       ? "254" + phone.replace(/\s/g, "").slice(1)
       : phone.replace(/\s/g, "");
@@ -411,7 +391,6 @@ app.post("/api/mpesa/pay", protect, async (req, res) => {
   }
 });
 
-// M-Pesa Callback
 app.post("/api/mpesa/callback", async (req, res) => {
   try {
     const result = req.body.Body?.stkCallback;
@@ -430,7 +409,7 @@ app.post("/api/mpesa/callback", async (req, res) => {
 });
 
 // ============================================================
-// USER ROUTES — Admin only
+// USER ROUTES
 // ============================================================
 
 app.get("/api/users", protect, adminOnly, async (req, res) => {
@@ -450,19 +429,6 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Agricore server is running" });
 });
 
-// ── Keep Alive ──────────────────────────────────────────────
-const RENDER_URL = process.env.RENDER_URL || "";
-if (RENDER_URL) {
-  setInterval(async () => {
-    try {
-      await axios.get(`${RENDER_URL}/api/health`);
-      console.log("🏓 Keep-alive ping sent");
-    } catch (err) {
-      console.log("⚠️ Keep-alive failed:", err.message);
-    }
-  }, 10 * 60 * 1000);
-}
-
 // ============================================================
 // START SERVER
 // ============================================================
@@ -470,9 +436,9 @@ if (RENDER_URL) {
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");
-    app.listen(process.env.PORT || 5001, () => {
-      console.log(`🚀 Agricore server running on port ${process.env.PORT || 5001}`);
-      console.log(`   Open: http://localhost:${process.env.PORT || 5001}/index.html`);
+    app.listen(PORT, () => {
+      console.log(`🚀 Agricore server running on port ${PORT}`);
+      console.log(`   Open: http://localhost:${PORT}/index.html`);
     });
   })
   .catch(err => console.log("❌ DB Error:", err.message));
