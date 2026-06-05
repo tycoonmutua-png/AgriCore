@@ -7,7 +7,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#3ddc6e">
-  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="icon" href="icon.png?v=2" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --green-btn: #2e7d32; --green-btn-hover: #1b5e20; --green-accent: #4caf50; --white: #ffffff; }
@@ -16,7 +19,6 @@
     .farm-bg { position: fixed; inset: 0; background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=90&fit=crop') center/cover no-repeat; filter: blur(6px) brightness(0.38) saturate(1.3); transform: scale(1.05); z-index: 0; }
     .farm-overlay { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(0,20,0,0.55) 0%, transparent 70%), radial-gradient(ellipse at 50% 100%, rgba(0,15,0,0.7) 0%, transparent 70%), linear-gradient(180deg, rgba(0,10,0,0.3) 0%, rgba(0,25,0,0.2) 50%, rgba(0,10,0,0.4) 100%); z-index: 0; }
 
-    /* ══ LOGIN PAGE ══ */
     #login-page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; }
     .brand-block { text-align: center; margin-bottom: 2.2rem; }
     .logo-mark { display: inline-block; margin-bottom: 10px; }
@@ -44,9 +46,10 @@
     .or-divider { display: flex; align-items: center; gap: 10px; margin: 1rem 0; }
     .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
     .or-divider span { font-size: 12px; color: rgba(255,255,255,0.35); }
-    .btn-google { width: 100%; padding: 12px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; color: #fff; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s; }
-    .btn-google:hover { background: rgba(255,255,255,0.13); }
-    .btn-google svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* Google button wrapper */
+    .google-btn-wrap { display: flex; justify-content: center; width: 100%; }
+
     .switch-link { text-align: center; margin-top: 1.1rem; font-size: 13px; color: rgba(255,255,255,0.45); }
     .switch-link a { color: var(--green-accent); text-decoration: none; font-weight: 600; }
     .terms-text { text-align: center; margin-top: 0.8rem; font-size: 11px; color: rgba(255,255,255,0.28); }
@@ -60,7 +63,6 @@
     .btn-primary.loading .spinner { display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ══ ADMIN DASHBOARD ══ */
     #dashboard-page { display: none; min-height: 100vh; position: relative; z-index: 1; }
     .dash-content { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #111d11; }
     .dash-header { background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); padding: 3rem 1.5rem 1.6rem; position: relative; overflow: hidden; }
@@ -71,8 +73,6 @@
     .dash-date { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
     .dash-avatar { position: absolute; top: 2.8rem; right: 1.5rem; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid rgba(255,255,255,0.25); }
     .dash-body { padding: 1.2rem 1.5rem; }
-
-    /* ── Weather Card ── */
     .weather-card { background: #fff; border-radius: 18px; padding: 1.2rem 1.4rem; color: #162016; margin-bottom: 1.3rem; position: relative; overflow: hidden; }
     .weather-card::before { content: ''; position: absolute; top: -25px; right: -25px; width: 110px; height: 110px; border-radius: 50%; background: rgba(46,125,50,0.07); }
     .weather-loc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -94,14 +94,10 @@
     .wstat-value { font-size: 13px; font-weight: 700; color: #1a3a1a; }
     .weather-loading { text-align: center; padding: 20px; color: #aaa; font-size: 13px; }
     .weather-error { text-align: center; padding: 12px; color: #c0392b; font-size: 12px; background: #fdf0f0; border-radius: 8px; }
-
-    /* ── Stats Row ── */
     .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.3rem; }
     .stat-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 0.9rem 0.8rem; text-align: center; }
     .stat-card-num { font-size: 22px; font-weight: 800; color: #4caf50; }
     .stat-card-label { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-
-    /* ── Quick Grid ── */
     .section-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; }
     .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.3rem; }
     .qcard { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 1rem; cursor: pointer; text-decoration: none; transition: background 0.2s, border-color 0.2s; display: block; }
@@ -109,10 +105,8 @@
     .qcard-icon { font-size: 22px; margin-bottom: 6px; }
     .qcard-title { font-size: 13px; font-weight: 600; color: #fff; }
     .qcard-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-
     .logout-btn { display: block; width: calc(100% - 3rem); margin: 0 1.5rem 1rem; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: rgba(255,255,255,0.45); font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; text-align: center; }
     .logout-btn:hover { background: rgba(220,53,69,0.1); border-color: rgba(220,53,69,0.3); color: #ff9090; }
-
     .bottom-nav { position: sticky; bottom: 0; background: #0d160d; border-top: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-around; padding: 0.8rem 0 1rem; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: rgba(255,255,255,0.35); font-size: 10px; transition: color 0.2s; background: none; border: none; font-family: 'Outfit', sans-serif; font-weight: 500; }
     .nav-item.active { color: #4caf50; }
@@ -123,7 +117,6 @@
 <div class="farm-bg"></div>
 <div class="farm-overlay"></div>
 
-<!-- ══════════════ LOGIN PAGE ══════════════ -->
 <div id="login-page">
   <div class="brand-block">
     <div class="logo-mark">
@@ -166,10 +159,8 @@
         <span class="btn-text">Log in</span><div class="spinner"></div>
       </button>
       <div class="or-divider"><span>or</span></div>
-      <button class="btn-google" onclick="handleGoogleLogin()">
-        <svg viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-        Continue with Google
-      </button>
+      <!-- Google Sign-In button rendered here -->
+      <div class="google-btn-wrap" id="google-btn-signin"></div>
       <p class="switch-link">Don't have an account? <a href="#" onclick="switchTab('register')">Sign up</a></p>
     </div>
 
@@ -194,20 +185,17 @@
         <span class="btn-text">Create Account</span><div class="spinner"></div>
       </button>
       <div class="or-divider"><span>or</span></div>
-      <button class="btn-google" onclick="handleGoogleLogin()">
-        <svg viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-        Sign up with Google
-      </button>
+      <!-- Google Sign-Up button rendered here -->
+      <div class="google-btn-wrap" id="google-btn-register"></div>
       <p class="terms-text">By signing up you agree to our <a href="#">Terms and conditions</a></p>
       <p class="switch-link" style="margin-top:0.6rem;">Already have an account? <a href="#" onclick="switchTab('signin')">Sign in</a></p>
     </div>
   </div>
 </div>
 
-<!-- ══════════════ ADMIN / STAFF DASHBOARD ══════════════ -->
+<!-- ADMIN DASHBOARD -->
 <div id="dashboard-page">
   <div class="dash-content">
-
     <div class="dash-header">
       <div class="dash-greeting" id="dash-greeting">Good Morning 🌿</div>
       <div class="dash-name" id="dash-username">Admin</div>
@@ -215,18 +203,13 @@
       <div class="dash-date" id="dash-date"></div>
       <div class="dash-avatar">⚙️</div>
     </div>
-
     <div class="dash-body">
-
-      <!-- WEATHER -->
       <div class="weather-card">
         <div class="weather-loc-row">
           <span class="weather-loc-label">📍 County:</span>
           <select class="county-select" id="countySelect" onchange="onCountyChange()">
             <option value="">— Select county —</option>
-            <optgroup label="Nairobi">
-              <option value="-1.2921,36.8219">Nairobi</option>
-            </optgroup>
+            <optgroup label="Nairobi"><option value="-1.2921,36.8219">Nairobi</option></optgroup>
             <optgroup label="Central">
               <option value="-0.4167,36.9500">Kiambu</option>
               <option value="-0.6698,37.1490">Murang'a</option>
@@ -292,65 +275,24 @@
           </select>
           <button class="weather-refresh" id="refreshBtn" onclick="refreshWeather()" title="Refresh">🔄</button>
         </div>
-        <div id="weatherContent">
-          <div class="weather-loading">📍 Select a county to load weather</div>
-        </div>
+        <div id="weatherContent"><div class="weather-loading">📍 Select a county to load weather</div></div>
       </div>
-
-      <!-- STATS ROW -->
       <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-card-num" id="stat-orders">—</div>
-          <div class="stat-card-label">Orders Today</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-num" id="stat-customers">—</div>
-          <div class="stat-card-label">Customers</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-num" id="stat-products">—</div>
-          <div class="stat-card-label">Products</div>
-        </div>
+        <div class="stat-card"><div class="stat-card-num" id="stat-orders">—</div><div class="stat-card-label">Orders Today</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="stat-customers">—</div><div class="stat-card-label">Customers</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="stat-products">—</div><div class="stat-card-label">Products</div></div>
       </div>
-
-      <!-- MANAGEMENT SHORTCUTS -->
       <div class="section-title">Management</div>
       <div class="quick-grid">
-        <a class="qcard" href="admin.html">
-          <div class="qcard-icon">🛠️</div>
-          <div class="qcard-title">Admin Panel</div>
-          <div class="qcard-sub">Full control</div>
-        </a>
-        <a class="qcard" href="shop.html">
-          <div class="qcard-icon">🛒</div>
-          <div class="qcard-title">View Shop</div>
-          <div class="qcard-sub">Customer view</div>
-        </a>
-        <a class="qcard" href="admin.html#orders">
-          <div class="qcard-icon">📋</div>
-          <div class="qcard-title">Orders</div>
-          <div class="qcard-sub">Manage & track</div>
-        </a>
-        <a class="qcard" href="admin.html#products">
-          <div class="qcard-icon">📦</div>
-          <div class="qcard-title">Inventory</div>
-          <div class="qcard-sub">Stock & products</div>
-        </a>
-        <a class="qcard" href="admin.html#customers">
-          <div class="qcard-icon">👥</div>
-          <div class="qcard-title">Customers</div>
-          <div class="qcard-sub">User accounts</div>
-        </a>
-        <a class="qcard" href="admin.html#reports">
-          <div class="qcard-icon">📊</div>
-          <div class="qcard-title">Reports</div>
-          <div class="qcard-sub">Sales analytics</div>
-        </a>
+        <a class="qcard" href="admin.html"><div class="qcard-icon">🛠️</div><div class="qcard-title">Admin Panel</div><div class="qcard-sub">Full control</div></a>
+        <a class="qcard" href="shop.html"><div class="qcard-icon">🛒</div><div class="qcard-title">View Shop</div><div class="qcard-sub">Customer view</div></a>
+        <a class="qcard" href="admin.html#orders"><div class="qcard-icon">📋</div><div class="qcard-title">Orders</div><div class="qcard-sub">Manage & track</div></a>
+        <a class="qcard" href="admin.html#products"><div class="qcard-icon">📦</div><div class="qcard-title">Inventory</div><div class="qcard-sub">Stock & products</div></a>
+        <a class="qcard" href="admin.html#customers"><div class="qcard-icon">👥</div><div class="qcard-title">Customers</div><div class="qcard-sub">User accounts</div></a>
+        <a class="qcard" href="admin.html#reports"><div class="qcard-icon">📊</div><div class="qcard-title">Reports</div><div class="qcard-sub">Sales analytics</div></a>
       </div>
     </div>
-
     <button class="logout-btn" onclick="handleLogout()">← Sign Out</button>
-
     <nav class="bottom-nav">
       <button class="nav-item active">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -369,20 +311,18 @@
         Reports
       </button>
     </nav>
-
   </div>
 </div>
 
 <script>
-  const API = 'https://agricore-production.up.railway.app';
+  const API           = 'https://agricore-production.up.railway.app';
+  const GOOGLE_CLIENT = '817674695982-inemh20lqvv2br5buh3bi79gsgfpumnr.apps.googleusercontent.com';
 
-  /* ── Helpers ── */
   function safeParse(str) {
     if (!str || str === 'undefined' || str === 'null') return null;
     try { return JSON.parse(str); } catch { return null; }
   }
 
-  /* ── On page load: check session ── */
   window.addEventListener('load', () => {
     setDashDate();
     const token = sessionStorage.getItem('token');
@@ -390,22 +330,54 @@
     if (token && user) routeUser(user);
   });
 
-  /* ══════════════════════════════════════
-     ROUTING — the single source of truth
-     admin/staff → show admin dashboard (this page)
-     customer / no role → redirect to shop.html
-  ══════════════════════════════════════ */
+  // ── Initialize Google Identity Services ──
+  window.onGoogleLibraryLoad = function() {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT,
+      callback:  handleGoogleCredential,
+      auto_select: false,
+    });
+
+    // Render button in sign-in panel
+    google.accounts.id.renderButton(
+      document.getElementById('google-btn-signin'),
+      { theme: 'outline', size: 'large', width: 320, text: 'continue_with', shape: 'rectangular' }
+    );
+    // Render button in register panel
+    google.accounts.id.renderButton(
+      document.getElementById('google-btn-register'),
+      { theme: 'outline', size: 'large', width: 320, text: 'signup_with', shape: 'rectangular' }
+    );
+  };
+
+  // ── Handle Google credential response ──
+  async function handleGoogleCredential(response) {
+    try {
+      const res = await fetch(`${API}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+      const raw = await res.json();
+      if (!res.ok) throw new Error(raw.message || 'Google login failed');
+      sessionStorage.setItem('token', raw.token);
+      sessionStorage.setItem('user',  JSON.stringify({ name: raw.name, email: raw.email, role: raw.role }));
+      routeUser(raw);
+    } catch(err) {
+      showError('signin-error', err.message || 'Google login failed');
+      document.getElementById('signin-error').classList.add('show');
+    }
+  }
+
   function routeUser(user) {
     const role = (user.role || '').toLowerCase().trim();
     if (role === 'admin' || role === 'staff') {
       showAdminDashboard(user);
     } else {
-      // Customers go straight to the shop
       window.location.href = 'shop.html';
     }
   }
 
-  /* ── Tab switching ── */
   function switchTab(tab) {
     document.getElementById('signin-panel').classList.toggle('visible', tab === 'signin');
     document.getElementById('register-panel').classList.toggle('visible', tab === 'register');
@@ -425,7 +397,6 @@
     btn.textContent = inp.type === 'password' ? '👁' : '🙈';
   }
 
-  /* ── Parse auth response (handles varied API shapes) ── */
   function parseAuthResponse(data) {
     const token = data.token || data.accessToken || data.access_token || '';
     const user  = data.user || data.userData || data.userInfo
@@ -433,7 +404,6 @@
     return { token, user };
   }
 
-  /* ── Login ── */
   async function handleLogin() {
     clearErrors();
     const email    = document.getElementById('signin-email').value.trim();
@@ -460,7 +430,6 @@
     }
   }
 
-  /* ── Register ── */
   async function handleRegister() {
     clearErrors();
     const name     = document.getElementById('reg-name').value.trim();
@@ -489,39 +458,27 @@
     }
   }
 
-  function handleGoogleLogin() { window.location.href = `${API}/api/auth/google`; }
-
-  /* ── Show admin dashboard ── */
   function showAdminDashboard(user) {
     document.getElementById('login-page').style.display     = 'none';
     document.getElementById('dashboard-page').style.display = 'block';
     document.querySelector('.farm-bg').style.display        = 'none';
     document.querySelector('.farm-overlay').style.display   = 'none';
-
     const firstName = (user.name || user.email || 'Admin').split(' ')[0];
     const role      = (user.role || 'staff');
     const hour      = new Date().getHours();
     const greet     = hour < 12 ? 'Good Morning 🌿' : hour < 17 ? 'Good Afternoon ☀️' : 'Good Evening 🌙';
-
     document.getElementById('dash-greeting').textContent    = greet;
     document.getElementById('dash-username').textContent    = firstName;
     document.getElementById('dash-role-badge').textContent  = role.charAt(0).toUpperCase() + role.slice(1);
-
-    // Restore last county
     const saved = localStorage.getItem('agricore_county_admin');
-    if (saved) {
-      document.getElementById('countySelect').value = saved;
-      fetchWeather(saved);
-    }
-
-    // Load stats (non-blocking)
+    if (saved) { document.getElementById('countySelect').value = saved; fetchWeather(saved); }
     loadStats(sessionStorage.getItem('token'));
   }
 
-  /* ── Logout ── */
   function handleLogout() {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
+    if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
     document.getElementById('dashboard-page').style.display = 'none';
     document.getElementById('login-page').style.display     = 'flex';
     document.querySelector('.farm-bg').style.display        = 'block';
@@ -530,7 +487,6 @@
     document.getElementById('signin-password').value = '';
   }
 
-  /* ── Date ── */
   function setDashDate() {
     const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -539,7 +495,6 @@
     if (el) el.textContent = `${days[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
   }
 
-  /* ── Stats (best-effort) ── */
   async function loadStats(token) {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
@@ -552,12 +507,9 @@
       document.getElementById('stat-orders').textContent    = ordRes.status === 'fulfilled' ? await getText(ordRes)  : '—';
       document.getElementById('stat-customers').textContent = cusRes.status === 'fulfilled' ? await getText(cusRes)  : '—';
       document.getElementById('stat-products').textContent  = proRes.status === 'fulfilled' ? await getText(proRes)  : '—';
-    } catch { /* stats are non-critical */ }
+    } catch { }
   }
 
-  /* ══════════════════════════════════════
-     WEATHER — Open-Meteo (free, no API key)
-  ══════════════════════════════════════ */
   const WMO = {
     0:['☀️','Clear sky'], 1:['🌤️','Mainly clear'], 2:['⛅','Partly cloudy'], 3:['☁️','Overcast'],
     45:['🌫️','Fog'], 48:['🌫️','Icy fog'],
@@ -596,10 +548,8 @@
       const [icon, desc] = WMO[c.weather_code] || ['🌡️','Unknown'];
       content.innerHTML = `
         <div class="wmain">
-          <div>
-            <div class="wtemp">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
-            <div class="whl">Feels ${Math.round(c.apparent_temperature)}°C &nbsp;|&nbsp; H:${Math.round(d.temperature_2m_max[0])}° L:${Math.round(d.temperature_2m_min[0])}°</div>
-          </div>
+          <div><div class="wtemp">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
+          <div class="whl">Feels ${Math.round(c.apparent_temperature)}°C &nbsp;|&nbsp; H:${Math.round(d.temperature_2m_max[0])}° L:${Math.round(d.temperature_2m_min[0])}°</div></div>
           <div><div class="wicon">${icon}</div><div class="wdesc">${desc}</div></div>
         </div>
         <div class="wstats">
@@ -609,13 +559,12 @@
           <div class="wstat"><div class="wstat-label">Wind</div><div class="wstat-value">${Math.round(c.wind_speed_10m)}km/h</div></div>
         </div>`;
     } catch {
-      content.innerHTML = `<div class="weather-error">⚠️ Could not load weather. Check your connection.</div>`;
+      content.innerHTML = `<div class="weather-error">⚠️ Could not load weather.</div>`;
     } finally {
       btn.classList.remove('spinning');
     }
   }
 
-  /* ── Enter key ── */
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
     document.getElementById('signin-panel').classList.contains('visible') ? handleLogin() : handleRegister();
