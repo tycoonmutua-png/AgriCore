@@ -21,10 +21,10 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 
-// ── Serve static files (HTML pages) ────────────────────────
+// ── Serve static files ──────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
 
-// ── Explicit HTML routes (fixes Railway 502 on direct URLs) ─
+// ── Explicit HTML routes ────────────────────────────────────
 app.get("/",           (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/shop",       (req, res) => res.sendFile(path.join(__dirname, "shop.html")));
 app.get("/admin",      (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
@@ -154,14 +154,11 @@ app.post("/api/auth/register", async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields required" });
-
     const exists = await User.findOne({ email });
     if (exists)
       return res.status(400).json({ message: "Email already registered" });
-
     const hashed = await bcrypt.hash(password, 10);
     const user   = await User.create({ name, email, password: hashed });
-
     res.status(201).json({
       token: generateToken(user),
       name:  user.name,
@@ -179,11 +176,9 @@ app.post("/api/auth/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user)
       return res.status(401).json({ message: "Invalid email or password" });
-
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res.status(401).json({ message: "Invalid email or password" });
-
     res.json({
       token: generateToken(user),
       name:  user.name,
@@ -195,18 +190,28 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// ── Google OAuth ────────────────────────────────────────────
 app.post("/api/auth/google", async (req, res) => {
   try {
-    const { access_token } = req.body;
+    const { credential } = req.body;
+    if (!credential)
+      return res.status(400).json({ message: "No Google credential provided" });
+
     const { data } = await axios.get(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      { headers: { Authorization: `Bearer ${access_token}` } }
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
     );
+
     const { email, name, sub } = data;
+    if (!email)
+      return res.status(401).json({ message: "Invalid Google token" });
 
     let user = await User.findOne({ email });
     if (!user)
       user = await User.create({ name, email, googleId: sub, role: "customer" });
+    else if (!user.googleId) {
+      user.googleId = sub;
+      await user.save();
+    }
 
     res.json({
       token: generateToken(user),
@@ -215,6 +220,7 @@ app.post("/api/auth/google", async (req, res) => {
       role:  user.role,
     });
   } catch (err) {
+    console.error("Google auth error:", err.message);
     res.status(500).json({ message: "Google login failed" });
   }
 });
@@ -237,7 +243,6 @@ app.post("/api/products", protect, adminOnly, async (req, res) => {
     const { name, price, stock, category, image, description, unit } = req.body;
     if (!name || price == null)
       return res.status(400).json({ message: "Name and price are required" });
-
     const product = await Product.create({
       name, price,
       stock:       stock       || 0,
@@ -270,7 +275,6 @@ app.delete("/api/products/:id", protect, adminOnly, async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product)
       return res.status(404).json({ message: "Product not found" });
-
     if (product.image && product.image.includes("cloudinary.com")) {
       const parts    = product.image.split("/");
       const file     = parts[parts.length - 1].split(".")[0];
@@ -278,7 +282,6 @@ app.delete("/api/products/:id", protect, adminOnly, async (req, res) => {
       const publicId = `${folder}/${file}`;
       await cloudinary.uploader.destroy(publicId);
     }
-
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });
   } catch (err) {
@@ -295,7 +298,6 @@ app.post("/api/orders", protect, async (req, res) => {
     const { customer, items, totalAmount, paymentStatus, paymentMethod, mpesaCode, status } = req.body;
     if (!customer || !items || !totalAmount)
       return res.status(400).json({ message: "Missing order details" });
-
     const order = await Order.create({
       customer, items, totalAmount,
       paymentStatus: paymentStatus || "pending",
@@ -359,13 +361,11 @@ app.post("/api/mpesa/pay", protect, async (req, res) => {
     const formattedPhone = phone.replace(/\s/g, "").startsWith("0")
       ? "254" + phone.replace(/\s/g, "").slice(1)
       : phone.replace(/\s/g, "");
-
     const token     = await getMpesaToken();
     const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, "").slice(0, 14);
     const password  = Buffer.from(
       `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`
     ).toString("base64");
-
     await axios.post(
       "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
@@ -383,7 +383,6 @@ app.post("/api/mpesa/pay", protect, async (req, res) => {
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
-
     res.json({ message: "Payment prompt sent. Enter your M-Pesa PIN." });
   } catch (err) {
     console.error("STK Push error:", err.response?.data || err.message);
@@ -421,6 +420,35 @@ app.get("/api/users", protect, adminOnly, async (req, res) => {
   }
 });
 
+app.get("/api/users/count", protect, adminOnly, async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.get("/api/products/count", async (req, res) => {
+  try {
+    const count = await Product.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.get("/api/orders/count/today", protect, adminOnly, async (req, res) => {
+  try {
+    const start = new Date(); start.setHours(0,0,0,0);
+    const end   = new Date(); end.setHours(23,59,59,999);
+    const count = await Order.countDocuments({ createdAt: { $gte: start, $lte: end } });
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // ============================================================
 // HEALTH CHECK
 // ============================================================
@@ -428,6 +456,22 @@ app.get("/api/users", protect, adminOnly, async (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Agricore server is running" });
 });
+
+// ============================================================
+// KEEP ALIVE
+// ============================================================
+
+const KEEP_ALIVE_URL = process.env.CALLBACK_URL || "";
+if (KEEP_ALIVE_URL) {
+  setInterval(async () => {
+    try {
+      await axios.get(`${KEEP_ALIVE_URL}/api/health`);
+      console.log("🏓 Keep-alive ping sent");
+    } catch (err) {
+      console.log("⚠️ Keep-alive failed:", err.message);
+    }
+  }, 5 * 60 * 1000);
+}
 
 // ============================================================
 // START SERVER
